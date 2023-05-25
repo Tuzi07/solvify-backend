@@ -7,7 +7,6 @@ import (
 	"github.com/Tuzi07/solvify-backend/internal/database"
 	"github.com/Tuzi07/solvify-backend/internal/models"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 func Run(db database.Database) error {
@@ -19,68 +18,89 @@ func Run(db database.Database) error {
 func buildAPIRouter(db database.Database) *gin.Engine {
 	router := gin.Default()
 
-	router.POST("/api/problem", createProblemHandler(db))
-	router.GET("/api/problem/:id", getProblemHandler(db))
-	router.POST("/api/problem/:id", updateProblemHandler(db))
+	router.POST("/api/problem", requestHandlerOfCreateProblem(db))
+	router.GET("/api/problem/:id", requestHandlerOfGetProblem(db))
+	router.POST("/api/problem/:id", requestHandlerOfUpdateProblem(db))
+	router.DELETE("/api/problem/:id", requestHandlerOfDeleteProblem(db))
 
 	return router
 }
 
-func createProblemHandler(db database.Database) gin.HandlerFunc {
-	return func(c *gin.Context) {
+func requestHandlerOfCreateProblem(db database.Database) gin.HandlerFunc {
+	return func(requestContext *gin.Context) {
 		var problem models.Problem
-		err := c.BindJSON(&problem)
+		err := requestContext.BindJSON(&problem)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{})
+			emptyResponse := gin.H{}
+			requestContext.JSON(http.StatusBadRequest, emptyResponse)
 			return
 		}
 
-		problem.ID = uuid.New().String()
-
-		err = db.AddProblem(problem)
+		err = db.CreateProblem(&problem)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{})
+			emptyResponse := gin.H{}
+			requestContext.JSON(http.StatusInternalServerError, emptyResponse)
 			return
 		}
 
-		c.JSON(http.StatusOK, problem)
+		requestContext.JSON(http.StatusOK, problem)
 	}
 }
 
-func getProblemHandler(db database.Database) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id := c.Params.ByName("id")
-
-		problem, err := db.GetProblem(id)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{})
-			return
-		}
-
-		c.JSON(http.StatusOK, problem)
-	}
-}
-
-func updateProblemHandler(db database.Database) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id := c.Params.ByName("id")
+func requestHandlerOfGetProblem(db database.Database) gin.HandlerFunc {
+	return func(requestContext *gin.Context) {
+		id := requestContext.Params.ByName("id")
 
 		var problem models.Problem
-		err := c.BindJSON(&problem)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{})
-			return
-		}
 
-		problem.ID = id
-
-		err = db.UpdateProblem(problem)
+		err := db.GetProblem(&problem, id)
 		if err != nil {
 			log.Println(err)
-			c.JSON(http.StatusInternalServerError, gin.H{})
+			emptyResponse := gin.H{}
+			requestContext.JSON(http.StatusInternalServerError, emptyResponse)
 			return
 		}
 
-		c.JSON(http.StatusOK, problem)
+		requestContext.JSON(http.StatusOK, problem)
+	}
+}
+
+func requestHandlerOfUpdateProblem(db database.Database) gin.HandlerFunc {
+	return func(requestContext *gin.Context) {
+		id := requestContext.Params.ByName("id")
+
+		var problem models.Problem
+		err := requestContext.BindJSON(&problem)
+		if err != nil {
+			emptyResponse := gin.H{}
+			requestContext.JSON(http.StatusBadRequest, emptyResponse)
+			return
+		}
+
+		err = db.UpdateProblem(&problem, id)
+		if err != nil {
+			log.Println(err)
+			emptyResponse := gin.H{}
+			requestContext.JSON(http.StatusInternalServerError, emptyResponse)
+			return
+		}
+
+		requestContext.JSON(http.StatusOK, problem)
+	}
+}
+
+func requestHandlerOfDeleteProblem(db database.Database) gin.HandlerFunc {
+	return func(requestContext *gin.Context) {
+		id := requestContext.Params.ByName("id")
+
+		err := db.DeleteProblem(id)
+		if err != nil {
+			log.Println(err)
+			emptyResponse := gin.H{}
+			requestContext.JSON(http.StatusInternalServerError, emptyResponse)
+			return
+		}
+
+		requestContext.JSON(http.StatusNoContent, nil)
 	}
 }

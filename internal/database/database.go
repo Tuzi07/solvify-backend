@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/Tuzi07/solvify-backend/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -18,10 +18,11 @@ type MongoDB struct {
 }
 
 type Database interface {
-	GetProblem(id string) (models.Problem, error)
-	AddProblem(problem models.Problem) error
-	UpdateProblem(problem models.Problem) error
-	DeleteProblem(id string) error
+	create(obj any, collectionName string) (id string, err error)
+	get(obj any, id string, collectionName string) error
+	update(obj any, id string, collectionName string) error
+	delete(id string, collectionName string) error
+	ProblemDatabase
 }
 
 func NewMongoDB() (*MongoDB, error) {
@@ -44,32 +45,52 @@ func NewMongoDB() (*MongoDB, error) {
 	return mongoDB, err
 }
 
-func (mgr *MongoDB) GetProblem(id string) (models.Problem, error) {
-	collection := mgr.client.Database("solvify").Collection("problems")
-	var config models.Problem
-	err := collection.FindOne(context.Background(), bson.D{bson.E{Key: "id", Value: id}}).Decode(&config)
+func (dbManager *MongoDB) create(obj any, collectionName string) (id string, err error) {
+	collection := dbManager.client.Database("solvify").Collection(collectionName)
+	result, err := collection.InsertOne(context.Background(), obj)
+
+	id = result.InsertedID.(primitive.ObjectID).Hex()
+	return id, err
+}
+
+func (dbManager *MongoDB) get(obj any, id string, collectionName string) error {
+	collection := dbManager.client.Database("solvify").Collection(collectionName)
+
+	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return models.Problem{}, err
+		return err
 	}
-	return config, nil
+
+	filter := bson.D{{Key: "_id", Value: objectID}}
+	err = collection.FindOne(context.Background(), filter).Decode(obj)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (mgr *MongoDB) AddProblem(problem models.Problem) error {
-	collection := mgr.client.Database("solvify").Collection("problems")
-	_, err := collection.InsertOne(context.Background(), problem)
+func (dbManager *MongoDB) update(obj any, id string, collectionName string) error {
+	collection := dbManager.client.Database("solvify").Collection(collectionName)
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": objectID}
+	update := bson.D{{Key: "$set", Value: obj}}
+
+	_, err = collection.UpdateOne(context.Background(), filter, update)
 	return err
 }
 
-func (mgr *MongoDB) UpdateProblem(problem models.Problem) error {
-	collection := mgr.client.Database("solvify").Collection("problems")
-	filter := bson.D{bson.E{Key: "id", Value: problem.ID}}
-	update := bson.D{bson.E{Key: "$set", Value: problem}}
-	_, err := collection.UpdateOne(context.Background(), filter, update)
-	return err
-}
+func (dbManager *MongoDB) delete(id string, collectionName string) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
 
-func (mgr *MongoDB) DeleteProblem(id string) error {
-	collection := mgr.client.Database("solvify").Collection("problems")
-	_, err := collection.DeleteOne(context.Background(), bson.D{bson.E{Key: "id", Value: id}})
+	collection := dbManager.client.Database("solvify").Collection(collectionName)
+	filter := bson.D{{Key: "_id", Value: objectID}}
+	_, err = collection.DeleteOne(context.Background(), filter)
 	return err
 }
