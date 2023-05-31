@@ -14,7 +14,7 @@ type ProblemDatabase interface {
 	CreateMCProblem(arg CreateMCProblemParams) (MCProblem, error)
 	CreateMSProblem(arg CreateMSProblemParams) (MSProblem, error)
 
-	GetProblem(id string) (TFProblem, error)
+	GetProblem(id string) (any, error)
 	UpdateProblem(arg UpdateProblemParams, id string) error
 	DeleteProblem(id string) error
 	ListProblems(arg ListProblemsParams) ([]Problem, error)
@@ -154,8 +154,8 @@ func (dbManager *MongoDB) CreateMSProblem(arg CreateMSProblemParams) (MSProblem,
 	return problem, err
 }
 
-func (dbManager *MongoDB) GetProblem(id string) (TFProblem, error) {
-	var problem TFProblem
+func (dbManager *MongoDB) GetProblem(id string) (any, error) {
+	var problem any
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return problem, err
@@ -163,7 +163,7 @@ func (dbManager *MongoDB) GetProblem(id string) (TFProblem, error) {
 
 	collection := dbManager.client.Database("solvify").Collection("problems")
 	filter := bson.D{{Key: "_id", Value: objectID}}
-	err = collection.FindOne(context.Background(), filter).Decode(&problem)
+	err = collection.FindOne(context.Background(), filter).Decode(problem)
 	if err != nil {
 		return problem, err
 	}
