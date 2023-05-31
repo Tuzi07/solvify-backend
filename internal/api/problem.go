@@ -11,10 +11,14 @@ import (
 func (server *Server) setupProblemRoutes() {
 	problemGroup := server.router.Group("/api/problems")
 	{
-		problemGroup.POST("", server.createTFProblem)
-		problemGroup.GET("/:id", server.getTFProblem)
-		problemGroup.POST("/:id", server.updateTFProblem)
-		problemGroup.DELETE("/:id", server.deleteTFProblem)
+		problemGroup.POST("/tf", server.createTFProblem)
+		problemGroup.POST("/mtf", server.createMTFProblem)
+		problemGroup.POST("/mc", server.createMCProblem)
+		problemGroup.POST("/ms", server.createMSProblem)
+
+		problemGroup.GET("/:id", server.getProblem)
+		problemGroup.POST("/:id", server.updateProblem)
+		problemGroup.DELETE("/:id", server.deleteProblem)
 	}
 }
 
@@ -35,10 +39,61 @@ func (server *Server) createTFProblem(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, problem)
 }
 
-func (server *Server) getTFProblem(ctx *gin.Context) {
+func (server *Server) createMTFProblem(ctx *gin.Context) {
+	var arg db.CreateMTFProblemParams
+
+	if err := ctx.ShouldBindJSON(&arg); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	problem, err := server.db.CreateMTFProblem(arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, problem)
+}
+
+func (server *Server) createMCProblem(ctx *gin.Context) {
+	var arg db.CreateMCProblemParams
+
+	if err := ctx.ShouldBindJSON(&arg); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	problem, err := server.db.CreateMCProblem(arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, problem)
+}
+
+func (server *Server) createMSProblem(ctx *gin.Context) {
+	var arg db.CreateMSProblemParams
+
+	if err := ctx.ShouldBindJSON(&arg); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	problem, err := server.db.CreateMSProblem(arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, problem)
+}
+
+func (server *Server) getProblem(ctx *gin.Context) {
 	id := ctx.Params.ByName("id")
 
-	problem, err := server.db.GetTFProblem(id)
+	problem, err := server.db.GetProblem(id)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -52,8 +107,8 @@ func (server *Server) getTFProblem(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, problem)
 }
 
-func (server *Server) updateTFProblem(ctx *gin.Context) {
-	var arg db.UpdateTFProblemParams
+func (server *Server) updateProblem(ctx *gin.Context) {
+	var arg db.UpdateProblemParams
 	if err := ctx.ShouldBindJSON(&arg); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -61,7 +116,7 @@ func (server *Server) updateTFProblem(ctx *gin.Context) {
 
 	id := ctx.Params.ByName("id")
 
-	err := server.db.UpdateTFProblem(arg, id)
+	err := server.db.UpdateProblem(arg, id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -70,10 +125,10 @@ func (server *Server) updateTFProblem(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, arg)
 }
 
-func (server *Server) deleteTFProblem(ctx *gin.Context) {
+func (server *Server) deleteProblem(ctx *gin.Context) {
 	id := ctx.Params.ByName("id")
 
-	err := server.db.DeleteTFProblem(id)
+	err := server.db.DeleteProblem(id)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))

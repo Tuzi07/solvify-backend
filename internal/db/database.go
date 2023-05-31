@@ -16,7 +16,7 @@ type MongoDB struct {
 }
 
 type Database interface {
-	TFProblemDatabase
+	ProblemDatabase
 }
 
 func NewMongoDB() (*MongoDB, error) {

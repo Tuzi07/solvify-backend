@@ -7,7 +7,7 @@ type ProblemType int
 const (
 	TrueFalse ProblemType = iota
 	MultipleTrueFalse
-	Multichoice
+	MultipleChoice
 	MultipleSelection
 )
 
@@ -32,27 +32,27 @@ type Problem struct {
 	CreatorID string `json:"creator_id" bson:"creator_id"`
 }
 
-// True False Problem
+// TFProblem represents a True False Problem
 type TFProblem struct {
 	Problem    `bson:"inline"`
 	BoolAnswer bool `json:"bool_answer" bson:"bool_answer"`
 }
 
-// Multiple True False Problem
+// MTFProblem represents a Multiple True False Problem
 type MTFProblem struct {
 	Problem     `bson:"inline"`
 	Items       []string `json:"items" bson:"items"`
 	BoolAnswers []bool   `json:"bool_answers" bson:"bool_answers"`
 }
 
-// Multiple Choice Problem
+// MCProblem represents a Multiple Choice Problem
 type MCProblem struct {
 	Problem     `bson:"inline"`
 	Items       []string `json:"items" bson:"items"`
 	CorrectItem int      `json:"correct_item" bson:"correct_item"`
 }
 
-// Multiple Selection Problem
+// MSProblem represents a Multiple Selection Problem
 type MSProblem struct {
 	Problem      `bson:"inline"`
 	Items        []string `json:"items" bson:"items"`
@@ -60,7 +60,7 @@ type MSProblem struct {
 }
 
 type ProblemList struct {
-	ID string `json:"_id" bson:"_id"`
+	ID string `json:"_id" bson:"_id,omitempty"`
 
 	ProblemIds []string `json:"problem_ids" bson:"problem_ids"`
 
@@ -71,4 +71,17 @@ type ProblemList struct {
 
 	Upvotes   int `json:"upvotes" bson:"upvotes"`
 	Downvotes int `json:"downvotes" bson:"downvotes"`
+}
+
+type User struct {
+	ID          string    `json:"_id" bson:"_id,omitempty"`
+	Username    string    `json:"username" bson:"username"`
+	DisplayName string    `json:"display_name" bson:"display_name"`
+	Languages   []string  `json:"languages" bson:"languages"`
+	CreatedAt   time.Time `json:"created_at" bson:"created_at"`
+
+	CreatedProblems    []string `json:"created_problems" bson:"created_problems"`
+	CreatedLists       []string `json:"created_lists" bson:"created_lists"`
+	SolveLaterProblems []string `json:"solve_later_problems" bson:"solve_later_problems"`
+	SolveLaterLists    []string `json:"solve_later_lists" bson:"solve_later_lists"`
 }
