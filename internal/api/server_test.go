@@ -1,6 +1,6 @@
-package server
+package api
 
-// fazer um teste pra quando o id existe e outro pra quando não existe
+// TODO
 
 // func TestUpdateProblemReceivesProblemId(t *testing.T) {
 // 	db := &mocks.Database{}

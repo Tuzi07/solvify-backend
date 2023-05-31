@@ -3,15 +3,19 @@ package main
 import (
 	"log"
 
-	"github.com/Tuzi07/solvify-backend/internal/database"
-	"github.com/Tuzi07/solvify-backend/internal/server"
+	"github.com/Tuzi07/solvify-backend/internal/api"
+	"github.com/Tuzi07/solvify-backend/internal/db"
 )
 
 func main() {
-	db, err := database.NewMongoDB()
+	db, err := db.NewMongoDB()
 	if err != nil {
-		log.Panic(err)
+		log.Fatal("cannot connect to database:", err)
 	}
-	err = server.Run(db)
-	log.Panic(err)
+
+	server := api.NewServer(db)
+	err = server.Start()
+	if err != nil {
+		log.Fatal("cannot start server:", err)
+	}
 }
