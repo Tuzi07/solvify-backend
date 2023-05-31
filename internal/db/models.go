@@ -59,6 +59,15 @@ type MSProblem struct {
 	CorrectItems []int    `json:"correct_items" bson:"correct_items"`
 }
 
+type AnyProblem struct {
+	Problem      `bson:"inline"`
+	BoolAnswer   bool     `json:"bool_answer" bson:"bool_answer,omitempty"`
+	Items        []string `json:"items" bson:"items,omitempty"`
+	BoolAnswers  []bool   `json:"bool_answers" bson:"bool_answers,omitempty"`
+	CorrectItem  int      `json:"correct_item" bson:"correct_item,omitempty"`
+	CorrectItems []int    `json:"correct_items" bson:"correct_items,omitempty"`
+}
+
 type ProblemList struct {
 	ID string `json:"_id" bson:"_id,omitempty"`
 
