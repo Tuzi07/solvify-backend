@@ -6,6 +6,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ProblemDatabase interface {
@@ -17,41 +18,41 @@ type ProblemDatabase interface {
 	GetProblem(id string) (AnyProblem, error)
 	UpdateProblem(arg UpdateProblemParams, id string) error
 	DeleteProblem(id string) error
-	ListProblems(arg ListProblemsParams) ([]Problem, error)
+	ListProblems(arg ListProblemsParams) ([]AnyProblem, error)
 }
 
 type CreateProblemParams struct {
-	Statement        string `json:"statement"`
+	Statement        string `json:"statement" binding:"required"`
 	Feedback         string `json:"feedback"`
 	SubjectId        string `json:"subject_id"`
 	TopicId          string `json:"topic_id"`
 	SubtopicId       string `json:"subtopic_id"`
 	LevelOfEducation string `json:"level_of_education"`
-	Language         string `json:"language"`
-	CreatorID        string `json:"creator_id"`
+	Language         string `json:"language" binding:"required,oneof=en pt"`
+	CreatorID        string `json:"creator_id" binding:"required"`
 }
 
 type CreateTFProblemParams struct {
 	CreateProblemParams
-	BoolAnswer bool `json:"bool_answer"`
+	BoolAnswer *bool `json:"bool_answer" binding:"required"` // pointer explained here: https://github.com/go-playground/validator/issues/692
 }
 
 type CreateMTFProblemParams struct {
 	CreateProblemParams
-	Items       []string `json:"items"`
-	BoolAnswers []bool   `json:"bool_answers"`
+	Items       []string `json:"items" binding:"required"`
+	BoolAnswers []bool   `json:"bool_answers" binding:"required"`
 }
 
 type CreateMCProblemParams struct {
 	CreateProblemParams
-	Items       []string `json:"items"`
-	CorrectItem int      `json:"correct_item"`
+	Items       []string `json:"items" binding:"required"`
+	CorrectItem *int     `json:"correct_item" binding:"required"`
 }
 
 type CreateMSProblemParams struct {
 	CreateProblemParams
-	Items        []string `json:"items"`
-	CorrectItems []int    `json:"correct_items"`
+	Items        []string `json:"items" binding:"required"`
+	CorrectItems []int    `json:"correct_items" binding:"required"`
 }
 
 func problemFromCreateParams(arg CreateProblemParams, problemType ProblemType) Problem {
@@ -78,7 +79,7 @@ func problemFromCreateParams(arg CreateProblemParams, problemType ProblemType) P
 func tfProblemFromCreateParams(arg CreateTFProblemParams) TFProblem {
 	return TFProblem{
 		Problem:    problemFromCreateParams(arg.CreateProblemParams, TrueFalse),
-		BoolAnswer: arg.BoolAnswer,
+		BoolAnswer: *arg.BoolAnswer,
 	}
 }
 
@@ -94,7 +95,7 @@ func mcProblemFromCreateParams(arg CreateMCProblemParams) MCProblem {
 	return MCProblem{
 		Problem:     problemFromCreateParams(arg.CreateProblemParams, MultipleChoice),
 		Items:       arg.Items,
-		CorrectItem: arg.CorrectItem,
+		CorrectItem: *arg.CorrectItem,
 	}
 }
 
@@ -215,8 +216,35 @@ func (dbManager *MongoDB) DeleteProblem(id string) error {
 }
 
 type ListProblemsParams struct {
+	Limit int32 `form:"limit"`
+	Skip  int32 `form:"skip"`
 }
 
-func (dbManager *MongoDB) ListProblems(arg ListProblemsParams) ([]Problem, error) {
-	return nil, nil
+func (dbManager *MongoDB) ListProblems(arg ListProblemsParams) ([]AnyProblem, error) {
+	findOptions := options.Find()
+	findOptions.SetLimit(int64(arg.Limit))
+	findOptions.SetSkip(int64(arg.Skip))
+
+	collection := dbManager.client.Database("solvify").Collection("problems")
+	cursor, err := collection.Find(context.Background(), bson.M{}, findOptions)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	problems := make([]AnyProblem, 0)
+	for cursor.Next(context.Background()) {
+		var problem AnyProblem
+		err := cursor.Decode(&problem)
+		if err != nil {
+			return nil, err
+		}
+		problems = append(problems, problem)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return problems, err
 }

@@ -32,7 +32,7 @@ func NewMongoDB() (*MongoDB, error) {
 
 	client, err := mongo.Connect(ctx, connectionOptions)
 	if err != nil {
-		log.Printf("could not connect to mongodb: %v\n", err)
+		log.Fatal("could not connect to mongodb:", err)
 	}
 
 	mongoDB := &MongoDB{client: client}

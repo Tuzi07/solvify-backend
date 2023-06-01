@@ -17,6 +17,7 @@ func (server *Server) setupProblemRoutes() {
 		problemGroup.POST("/ms", server.createMSProblem)
 
 		problemGroup.GET("/:id", server.getProblem)
+		problemGroup.GET("", server.listProblems)
 		problemGroup.POST("/:id", server.updateProblem)
 		problemGroup.DELETE("/:id", server.deleteProblem)
 	}
@@ -105,6 +106,32 @@ func (server *Server) getProblem(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, problem)
+}
+
+type listProblemsRequest struct {
+	PageID   int32 `form:"page_id" binding:"required,min=1"`
+	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
+}
+
+func (server *Server) listProblems(ctx *gin.Context) {
+	var req listProblemsRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.ListProblemsParams{
+		Limit: req.PageSize,
+		Skip:  (req.PageID - 1) * req.PageSize,
+	}
+
+	problems, err := server.db.ListProblems(arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, problems)
 }
 
 func (server *Server) updateProblem(ctx *gin.Context) {
