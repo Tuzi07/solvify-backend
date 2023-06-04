@@ -7,27 +7,27 @@ package db
 // 	DeleteProblemList(id string) error
 // }
 
-// func (dbManager *MongoDB) CreateProblemList(list *models.ProblemList) error {
+// func (db *MongoDB) CreateProblemList(list *models.ProblemList) error {
 // 	list.CreatedAt = time.Now()
-// 	id, err := dbManager.create(&list, "problemlists")
+// 	id, err := db.create(&list, "problemlists")
 
 // 	list.ID = id
 // 	return err
 // }
 
-// func (dbManager *MongoDB) GetProblemList(list *models.ProblemList, id string) error {
-// 	err := dbManager.get(&list, id, "problemlists")
+// func (db *MongoDB) GetProblemList(list *models.ProblemList, id string) error {
+// 	err := db.get(&list, id, "problemlists")
 // 	return err
 // }
 
-// func (dbManager *MongoDB) UpdateProblemList(list *models.ProblemList, id string) error {
-// 	err := dbManager.update(&list, id, "problemlists")
+// func (db *MongoDB) UpdateProblemList(list *models.ProblemList, id string) error {
+// 	err := db.update(&list, id, "problemlists")
 
 // 	list.ID = id
 // 	return err
 // }
 
-// func (dbManager *MongoDB) DeleteProblemList(id string) error {
-// 	err := dbManager.delete(id, "problemlists")
+// func (db *MongoDB) DeleteProblemList(id string) error {
+// 	err := db.delete(id, "problemlists")
 // 	return err
 // }

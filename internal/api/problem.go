@@ -92,7 +92,7 @@ func (server *Server) createMSProblem(ctx *gin.Context) {
 }
 
 func (server *Server) getProblem(ctx *gin.Context) {
-	id := ctx.Params.ByName("id")
+	id := ctx.Param("id")
 
 	problem, err := server.db.GetProblem(id)
 	if err != nil {
@@ -141,22 +141,8 @@ func (server *Server) updateProblem(ctx *gin.Context) {
 		return
 	}
 
-	id := ctx.Params.ByName("id")
-
-	err := server.db.UpdateProblem(arg, id)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	ctx.JSON(http.StatusOK, arg)
-}
-
-func (server *Server) deleteProblem(ctx *gin.Context) {
-	id := ctx.Params.ByName("id")
-
-	err := server.db.DeleteProblem(id)
-	if err != nil {
+	id := ctx.Param("id")
+	if err := server.db.UpdateProblem(arg, id); err != nil {
 		if err == mongo.ErrNoDocuments {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
@@ -166,5 +152,21 @@ func (server *Server) deleteProblem(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusNoContent, nil)
+	ctx.JSON(http.StatusOK, arg)
+}
+
+func (server *Server) deleteProblem(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	if err := server.db.DeleteProblem(id); err != nil {
+		if err.Error() == "problem not found" {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusNoContent, gin.H{})
 }

@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -28,7 +29,7 @@ type CreateProblemParams struct {
 	TopicId          string `json:"topic_id"`
 	SubtopicId       string `json:"subtopic_id"`
 	LevelOfEducation string `json:"level_of_education"`
-	Language         string `json:"language" binding:"required,oneof=en pt"`
+	Language         string `json:"language" binding:"required,language"`
 	CreatorID        string `json:"creator_id" binding:"required"`
 }
 
@@ -107,10 +108,10 @@ func msProblemFromCreateParams(arg CreateMSProblemParams) MSProblem {
 	}
 }
 
-func (dbManager *MongoDB) CreateTFProblem(arg CreateTFProblemParams) (TFProblem, error) {
+func (db *MongoDB) CreateTFProblem(arg CreateTFProblemParams) (TFProblem, error) {
 	problem := tfProblemFromCreateParams(arg)
 
-	collection := dbManager.client.Database("solvify").Collection("problems")
+	collection := db.client.Database("solvify").Collection("problems")
 	result, err := collection.InsertOne(context.Background(), problem)
 
 	id := result.InsertedID.(primitive.ObjectID).Hex()
@@ -119,10 +120,10 @@ func (dbManager *MongoDB) CreateTFProblem(arg CreateTFProblemParams) (TFProblem,
 	return problem, err
 }
 
-func (dbManager *MongoDB) CreateMTFProblem(arg CreateMTFProblemParams) (MTFProblem, error) {
+func (db *MongoDB) CreateMTFProblem(arg CreateMTFProblemParams) (MTFProblem, error) {
 	problem := mtfProblemFromCreateParams(arg)
 
-	collection := dbManager.client.Database("solvify").Collection("problems")
+	collection := db.client.Database("solvify").Collection("problems")
 	result, err := collection.InsertOne(context.Background(), problem)
 
 	id := result.InsertedID.(primitive.ObjectID).Hex()
@@ -131,10 +132,10 @@ func (dbManager *MongoDB) CreateMTFProblem(arg CreateMTFProblemParams) (MTFProbl
 	return problem, err
 }
 
-func (dbManager *MongoDB) CreateMCProblem(arg CreateMCProblemParams) (MCProblem, error) {
+func (db *MongoDB) CreateMCProblem(arg CreateMCProblemParams) (MCProblem, error) {
 	problem := mcProblemFromCreateParams(arg)
 
-	collection := dbManager.client.Database("solvify").Collection("problems")
+	collection := db.client.Database("solvify").Collection("problems")
 	result, err := collection.InsertOne(context.Background(), problem)
 
 	id := result.InsertedID.(primitive.ObjectID).Hex()
@@ -143,10 +144,10 @@ func (dbManager *MongoDB) CreateMCProblem(arg CreateMCProblemParams) (MCProblem,
 	return problem, err
 }
 
-func (dbManager *MongoDB) CreateMSProblem(arg CreateMSProblemParams) (MSProblem, error) {
+func (db *MongoDB) CreateMSProblem(arg CreateMSProblemParams) (MSProblem, error) {
 	problem := msProblemFromCreateParams(arg)
 
-	collection := dbManager.client.Database("solvify").Collection("problems")
+	collection := db.client.Database("solvify").Collection("problems")
 	result, err := collection.InsertOne(context.Background(), problem)
 
 	id := result.InsertedID.(primitive.ObjectID).Hex()
@@ -155,21 +156,17 @@ func (dbManager *MongoDB) CreateMSProblem(arg CreateMSProblemParams) (MSProblem,
 	return problem, err
 }
 
-func (dbManager *MongoDB) GetProblem(id string) (AnyProblem, error) {
+func (db *MongoDB) GetProblem(id string) (AnyProblem, error) {
 	var problem AnyProblem
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return problem, err
 	}
 
-	collection := dbManager.client.Database("solvify").Collection("problems")
+	collection := db.client.Database("solvify").Collection("problems")
 	filter := bson.D{{Key: "_id", Value: objectID}}
 	err = collection.FindOne(context.Background(), filter).Decode(&problem)
-	if err != nil {
-		return problem, err
-	}
-
-	return problem, nil
+	return problem, err
 }
 
 type UpdateProblemParams struct {
@@ -178,16 +175,16 @@ type UpdateProblemParams struct {
 	TopicId          string `json:"topic_id"`
 	SubtopicId       string `json:"subtopic_id"`
 	LevelOfEducation string `json:"level_of_education"`
-	Language         string `json:"language"`
+	Language         string `json:"language" binding:"language"`
 }
 
-func (dbManager *MongoDB) UpdateProblem(arg UpdateProblemParams, id string) error {
+func (db *MongoDB) UpdateProblem(arg UpdateProblemParams, id string) error {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
 
-	collection := dbManager.client.Database("solvify").Collection("problems")
+	collection := db.client.Database("solvify").Collection("problems")
 	filter := bson.M{"_id": objectID}
 	update := bson.M{"$set": bson.M{
 		"feedback":           arg.Feedback,
@@ -202,15 +199,19 @@ func (dbManager *MongoDB) UpdateProblem(arg UpdateProblemParams, id string) erro
 	return err
 }
 
-func (dbManager *MongoDB) DeleteProblem(id string) error {
+func (db *MongoDB) DeleteProblem(id string) error {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
 
-	collection := dbManager.client.Database("solvify").Collection("problems")
+	collection := db.client.Database("solvify").Collection("problems")
 	filter := bson.D{{Key: "_id", Value: objectID}}
-	_, err = collection.DeleteOne(context.Background(), filter)
+	result, err := collection.DeleteOne(context.Background(), filter)
+
+	if result.DeletedCount == 0 {
+		return errors.New("problem not found")
+	}
 
 	return err
 }
@@ -220,12 +221,12 @@ type ListProblemsParams struct {
 	Skip  int32 `form:"skip"`
 }
 
-func (dbManager *MongoDB) ListProblems(arg ListProblemsParams) ([]AnyProblem, error) {
+func (db *MongoDB) ListProblems(arg ListProblemsParams) ([]AnyProblem, error) {
 	findOptions := options.Find()
 	findOptions.SetLimit(int64(arg.Limit))
 	findOptions.SetSkip(int64(arg.Skip))
 
-	collection := dbManager.client.Database("solvify").Collection("problems")
+	collection := db.client.Database("solvify").Collection("problems")
 	cursor, err := collection.Find(context.Background(), bson.M{}, findOptions)
 	if err != nil {
 		return nil, err
