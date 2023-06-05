@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/Tuzi07/solvify-backend/internal/db"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -28,6 +29,10 @@ func (server *Server) buildAPIRouter() {
 	}
 
 	server.setupUserRoutes()
+	config := cors.DefaultConfig()
+  	config.AllowAllOrigins = true
+
+	server.router.Use(cors.New(config))
 	server.setupProblemRoutes()
 	// setupProblemListRoutes()
 }
