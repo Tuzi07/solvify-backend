@@ -16,6 +16,11 @@ func (server *Server) setupProblemRoutes() {
 		problemGroup.POST("/mc", server.createMCProblem)
 		problemGroup.POST("/ms", server.createMSProblem)
 
+		problemGroup.POST("/solve-tf", server.solveTFProblem)
+		problemGroup.POST("/solve-mtf", server.solveMTFProblem)
+		problemGroup.POST("/solve-mc", server.solveMCProblem)
+		problemGroup.POST("/solve-ms", server.solveMSProblem)
+
 		problemGroup.GET("/:id", server.getProblem)
 		problemGroup.GET("", server.listProblems)
 		problemGroup.POST("/:id", server.updateProblem)
@@ -169,4 +174,68 @@ func (server *Server) deleteProblem(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusNoContent, gin.H{})
+}
+
+func (server *Server) solveTFProblem(ctx *gin.Context) {
+	var arg db.SolveTFProblemParams
+	if err := ctx.ShouldBindJSON(&arg); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.db.SolveTFProblem(arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (server *Server) solveMTFProblem(ctx *gin.Context) {
+	var arg db.SolveMTFProblemParams
+	if err := ctx.ShouldBindJSON(&arg); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.db.SolveMTFProblem(arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (server *Server) solveMCProblem(ctx *gin.Context) {
+	var arg db.SolveMCProblemParams
+	if err := ctx.ShouldBindJSON(&arg); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.db.SolveMCProblem(arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (server *Server) solveMSProblem(ctx *gin.Context) {
+	var arg db.SolveMSProblemParams
+	if err := ctx.ShouldBindJSON(&arg); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.db.SolveMSProblem(arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, result)
 }

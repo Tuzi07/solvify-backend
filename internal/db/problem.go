@@ -16,6 +16,11 @@ type ProblemDatabase interface {
 	CreateMCProblem(arg CreateMCProblemParams) (MCProblem, error)
 	CreateMSProblem(arg CreateMSProblemParams) (MSProblem, error)
 
+	SolveTFProblem(arg SolveTFProblemParams) (TFProblemAttempt, error)
+	SolveMTFProblem(arg SolveMTFProblemParams) (MTFProblemAttempt, error)
+	SolveMCProblem(arg SolveMCProblemParams) (MCProblemAttempt, error)
+	SolveMSProblem(arg SolveMSProblemParams) (MSProblemAttempt, error)
+
 	GetProblem(id string) (AnyProblem, error)
 	UpdateProblem(arg UpdateProblemParams, id string) error
 	DeleteProblem(id string) error
@@ -53,7 +58,7 @@ type CreateMCProblemParams struct {
 type CreateMSProblemParams struct {
 	CreateProblemParams
 	Items        []string `json:"items" binding:"required"`
-	CorrectItems []int    `json:"correct_items" binding:"required"`
+	CorrectItems []bool   `json:"correct_items" binding:"required"`
 }
 
 func problemFromCreateParams(arg CreateProblemParams, problemType ProblemType) Problem {
@@ -248,4 +253,217 @@ func (db *MongoDB) ListProblems(arg ListProblemsParams) ([]AnyProblem, error) {
 	}
 
 	return problems, err
+}
+
+type SolveTFProblemParams struct {
+	UserID       string `json:"user_id" binding:"required"`
+	ProblemId    string `json:"problem_id" binding:"required"`
+	BoolAnswer   *bool  `json:"bool_answer" binding:"required"`
+	BoolResponse *bool  `json:"bool_response" binding:"required"`
+}
+
+func (db *MongoDB) SolveTFProblem(arg SolveTFProblemParams) (TFProblemAttempt, error) {
+	attempt := tfProblemAttemptFromParams(arg)
+
+	collection := db.client.Database("solvify").Collection("problem_attempts")
+	result, err := collection.InsertOne(context.Background(), attempt)
+	if err != nil {
+		return attempt, err
+	}
+
+	id := result.InsertedID.(primitive.ObjectID).Hex()
+	attempt.ID = id
+
+	collection = db.client.Database("solvify").Collection("user_problem_histories")
+	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemId}
+	update := bson.M{
+		"$push": bson.M{"problem_attempts_ids": id},
+		"$setOnInsert": bson.M{
+			"user_id":    arg.UserID,
+			"problem_id": arg.ProblemId,
+			"VoteStatus": NoVote,
+		},
+	}
+	options := options.Update().SetUpsert(true)
+	_, err = collection.UpdateOne(context.Background(), filter, update, options)
+
+	return attempt, err
+}
+
+func tfProblemAttemptFromParams(arg SolveTFProblemParams) TFProblemAttempt {
+	return TFProblemAttempt{
+		ProblemAttempt: ProblemAttempt{
+			AttemptedAt:      time.Now(),
+			SolutionAccuracy: tfSolutionAccuracy(*arg.BoolAnswer, *arg.BoolResponse),
+		},
+		BoolResponse: *arg.BoolResponse,
+	}
+}
+
+func tfSolutionAccuracy(answer bool, response bool) SolutionAccuracy {
+	if answer == response {
+		return Correct
+	}
+	return Incorrect
+}
+
+type SolveMTFProblemParams struct {
+	UserID        string `json:"user_id" binding:"required"`
+	ProblemId     string `json:"problem_id" binding:"required"`
+	BoolAnswers   []bool `json:"bool_answers" binding:"required"`
+	BoolResponses []bool `json:"bool_responses" binding:"required"`
+}
+
+func (db *MongoDB) SolveMTFProblem(arg SolveMTFProblemParams) (MTFProblemAttempt, error) {
+	attempt := mtfProblemAttemptFromParams(arg)
+
+	collection := db.client.Database("solvify").Collection("problem_attempts")
+	result, err := collection.InsertOne(context.Background(), attempt)
+	if err != nil {
+		return attempt, err
+	}
+
+	id := result.InsertedID.(primitive.ObjectID).Hex()
+	attempt.ID = id
+
+	collection = db.client.Database("solvify").Collection("user_problem_histories")
+	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemId}
+	update := bson.M{
+		"$push": bson.M{"problem_attempts_ids": id},
+		"$setOnInsert": bson.M{
+			"user_id":    arg.UserID,
+			"problem_id": arg.ProblemId,
+			"VoteStatus": NoVote,
+		},
+	}
+	options := options.Update().SetUpsert(true)
+	_, err = collection.UpdateOne(context.Background(), filter, update, options)
+
+	return attempt, err
+}
+
+func mtfProblemAttemptFromParams(arg SolveMTFProblemParams) MTFProblemAttempt {
+	return MTFProblemAttempt{
+		ProblemAttempt: ProblemAttempt{
+			AttemptedAt:      time.Now(),
+			SolutionAccuracy: mtfSolutionAccuracy(arg.BoolAnswers, arg.BoolResponses),
+		},
+		BoolResponses: arg.BoolResponses,
+	}
+}
+
+func mtfSolutionAccuracy(answers []bool, responses []bool) SolutionAccuracy {
+	amountOfCorrectAnswers := 0
+	amountOfItems := len(answers)
+
+	for i := 0; i < amountOfItems; i++ {
+		if answers[i] == responses[i] {
+			amountOfCorrectAnswers++
+		}
+	}
+
+	if amountOfCorrectAnswers == amountOfItems {
+		return Correct
+	} else if amountOfCorrectAnswers == 0 {
+		return Incorrect
+	} else {
+		return Partial
+	}
+}
+
+type SolveMCProblemParams struct {
+	UserID       string `json:"user_id" binding:"required"`
+	ProblemId    string `json:"problem_id" binding:"required"`
+	CorrectItem  *int   `json:"correct_item" binding:"required"`
+	ItemResponse *int   `json:"item_response" binding:"required"`
+}
+
+func (db *MongoDB) SolveMCProblem(arg SolveMCProblemParams) (MCProblemAttempt, error) {
+	attempt := mcProblemAttemptFromParams(arg)
+
+	collection := db.client.Database("solvify").Collection("problem_attempts")
+	result, err := collection.InsertOne(context.Background(), attempt)
+	if err != nil {
+		return attempt, err
+	}
+
+	id := result.InsertedID.(primitive.ObjectID).Hex()
+	attempt.ID = id
+
+	collection = db.client.Database("solvify").Collection("user_problem_histories")
+	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemId}
+	update := bson.M{
+		"$push": bson.M{"problem_attempts_ids": id},
+		"$setOnInsert": bson.M{
+			"user_id":    arg.UserID,
+			"problem_id": arg.ProblemId,
+			"VoteStatus": NoVote,
+		},
+	}
+	options := options.Update().SetUpsert(true)
+	_, err = collection.UpdateOne(context.Background(), filter, update, options)
+
+	return attempt, err
+}
+
+func mcProblemAttemptFromParams(arg SolveMCProblemParams) MCProblemAttempt {
+	return MCProblemAttempt{
+		ProblemAttempt: ProblemAttempt{
+			AttemptedAt:      time.Now(),
+			SolutionAccuracy: mcSolutionAccuracy(*arg.CorrectItem, *arg.ItemResponse),
+		},
+		ItemResponse: *arg.ItemResponse,
+	}
+}
+
+func mcSolutionAccuracy(answer int, response int) SolutionAccuracy {
+	if answer == response {
+		return Correct
+	}
+	return Incorrect
+}
+
+type SolveMSProblemParams struct {
+	UserID        string `json:"user_id" binding:"required"`
+	ProblemId     string `json:"problem_id" binding:"required"`
+	CorrectItems  []bool `json:"correct_items" binding:"required"`
+	ItemResponses []bool `json:"item_responses" binding:"required"`
+}
+
+func (db *MongoDB) SolveMSProblem(arg SolveMSProblemParams) (MSProblemAttempt, error) {
+	attempt := msProblemAttemptFromParams(arg)
+
+	collection := db.client.Database("solvify").Collection("problem_attempts")
+	result, err := collection.InsertOne(context.Background(), attempt)
+	if err != nil {
+		return attempt, err
+	}
+
+	id := result.InsertedID.(primitive.ObjectID).Hex()
+	attempt.ID = id
+
+	collection = db.client.Database("solvify").Collection("user_problem_histories")
+	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemId}
+	update := bson.M{
+		"$push": bson.M{"problem_attempts_ids": id},
+		"$setOnInsert": bson.M{
+			"user_id":    arg.UserID,
+			"problem_id": arg.ProblemId,
+			"VoteStatus": NoVote,
+		},
+	}
+	options := options.Update().SetUpsert(true)
+	_, err = collection.UpdateOne(context.Background(), filter, update, options)
+
+	return attempt, err
+}
+
+func msProblemAttemptFromParams(arg SolveMSProblemParams) MSProblemAttempt {
+	return MSProblemAttempt{
+		ProblemAttempt: ProblemAttempt{
+			AttemptedAt:      time.Now(),
+			SolutionAccuracy: mtfSolutionAccuracy(arg.CorrectItems, arg.ItemResponses),
+		},
+		ItemResponses: arg.ItemResponses,
+	}
 }

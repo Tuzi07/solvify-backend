@@ -56,7 +56,7 @@ type MCProblem struct {
 type MSProblem struct {
 	Problem      `bson:"inline"`
 	Items        []string `json:"items" bson:"items"`
-	CorrectItems []int    `json:"correct_items" bson:"correct_items"`
+	CorrectItems []bool   `json:"correct_items" bson:"correct_items"`
 }
 
 type AnyProblem struct {
@@ -93,4 +93,54 @@ type User struct {
 	CreatedLists       []string `json:"created_lists" bson:"created_lists"`
 	SolveLaterProblems []string `json:"solve_later_problems" bson:"solve_later_problems"`
 	SolveLaterLists    []string `json:"solve_later_lists" bson:"solve_later_lists"`
+}
+
+type VoteStatus int
+
+const (
+	NoVote VoteStatus = iota
+	Upvote
+	Downvote
+)
+
+type UserProblemHistory struct {
+	ID                 string     `json:"_id" bson:"_id,omitempty"`
+	UserID             string     `json:"user_id" bson:"user_id"`
+	ProblemID          string     `json:"problem_id" bson:"problem_id"`
+	ProblemAttemptsIDs []string   `json:"problem_attempts_ids" bson:"problem_attempts_ids"`
+	VoteStatus         VoteStatus `json:"vote_status" bson:"vote_status"`
+}
+
+type SolutionAccuracy int
+
+const (
+	Incorrect SolutionAccuracy = iota
+	Partial
+	Correct
+)
+
+type ProblemAttempt struct {
+	ID               string           `json:"_id" bson:"_id,omitempty"`
+	AttemptedAt      time.Time        `json:"attempted_at" bson:"attempted_at"`
+	SolutionAccuracy SolutionAccuracy `json:"solution_accuracy" bson:"solution_accuracy"`
+}
+
+type TFProblemAttempt struct {
+	ProblemAttempt `bson:"inline"`
+	BoolResponse   bool `json:"bool_response" bson:"bool_response"`
+}
+
+type MTFProblemAttempt struct {
+	ProblemAttempt `bson:"inline"`
+	BoolResponses  []bool `json:"bool_responses" bson:"bool_responses"`
+}
+
+type MCProblemAttempt struct {
+	ProblemAttempt `bson:"inline"`
+	ItemResponse   int `json:"item_response" bson:"item_response"`
+}
+
+type MSProblemAttempt struct {
+	ProblemAttempt `bson:"inline"`
+	ItemResponses  []bool `json:"item_responses" bson:"item_responses"`
 }
