@@ -28,13 +28,13 @@ func (server *Server) buildAPIRouter() {
 		v.RegisterValidation("languages", validLanguages)
 	}
 
-	server.setupUserRoutes()
 	config := cors.DefaultConfig()
-  	config.AllowAllOrigins = true
-
+	config.AllowAllOrigins = true
 	server.router.Use(cors.New(config))
+
 	server.setupProblemRoutes()
-	// setupProblemListRoutes()
+	server.setupUserRoutes()
+	server.setupProblemListRoutes()
 }
 
 func (server *Server) Start() error {

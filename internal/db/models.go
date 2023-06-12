@@ -68,20 +68,6 @@ type AnyProblem struct {
 	CorrectItems []int    `json:"correct_items" bson:"correct_items,omitempty"`
 }
 
-type ProblemList struct {
-	ID string `json:"_id" bson:"_id,omitempty"`
-
-	ProblemIds []string `json:"problem_ids" bson:"problem_ids"`
-
-	Description string `json:"description" bson:"description"`
-
-	CreatorID string    `json:"creator_id" bson:"creator_id"`
-	CreatedAt time.Time `json:"created_at" bson:"created_at"`
-
-	Upvotes   int `json:"upvotes" bson:"upvotes"`
-	Downvotes int `json:"downvotes" bson:"downvotes"`
-}
-
 type User struct {
 	ID          string    `json:"_id" bson:"_id,omitempty"`
 	Username    string    `json:"username" bson:"username"`
@@ -143,4 +129,49 @@ type MCProblemAttempt struct {
 type MSProblemAttempt struct {
 	ProblemAttempt `bson:"inline"`
 	ItemResponses  []bool `json:"item_responses" bson:"item_responses"`
+}
+
+type ProblemList struct {
+	ID          string    `json:"_id" bson:"_id,omitempty"`
+	CreatorID   string    `json:"creator_id" bson:"creator_id"`
+	ProblemIDs  []string  `json:"problem_ids" bson:"problem_ids"`
+	Description string    `json:"description" bson:"description"`
+	CreatedAt   time.Time `json:"created_at" bson:"created_at"`
+
+	Upvotes   int `json:"upvotes" bson:"upvotes"`
+	Downvotes int `json:"downvotes" bson:"downvotes"`
+}
+
+type Subject struct {
+	ID       string `json:"_id" bson:"_id,omitempty"`
+	Name     string `json:"name" bson:"name"`
+	Language string `json:"language" bson:"language"`
+}
+
+type Topic struct {
+	ID        string `json:"_id" bson:"_id,omitempty"`
+	Name      string `json:"name" bson:"name"`
+	SubjectId string `json:"subject_id" bson:"subject_id"`
+}
+
+type Subtopic struct {
+	ID      string `json:"_id" bson:"_id,omitempty"`
+	Name    string `json:"name" bson:"name"`
+	TopicId string `json:"topic_id" bson:"topic_id"`
+}
+
+type ProblemReport struct {
+	ID         string    `json:"_id" bson:"_id,omitempty"`
+	ProblemId  string    `json:"problem_id" bson:"problem_id"`
+	UserID     string    `json:"user_id" bson:"user_id"`
+	ReportedAt time.Time `json:"reported_at" bson:"reported_at"`
+	Reason     string    `json:"reason" bson:"reason"`
+}
+
+type ListReport struct {
+	ID         string    `json:"_id" bson:"_id,omitempty"`
+	ListId     string    `json:"list_id" bson:"list_id"`
+	UserID     string    `json:"user_id" bson:"user_id"`
+	ReportedAt time.Time `json:"reported_at" bson:"reported_at"`
+	Reason     string    `json:"reason" bson:"reason"`
 }

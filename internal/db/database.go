@@ -18,6 +18,7 @@ type MongoDB struct {
 type Database interface {
 	ProblemDatabase
 	UserDatabase
+	ProblemListDatabase
 }
 
 func NewMongoDB() (*MongoDB, error) {
