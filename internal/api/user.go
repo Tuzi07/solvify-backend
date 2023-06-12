@@ -5,7 +5,6 @@ import (
 
 	"github.com/Tuzi07/solvify-backend/internal/db"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (server *Server) setupUserRoutes() {
@@ -40,11 +39,6 @@ func (server *Server) getUser(ctx *gin.Context) {
 
 	user, err := server.db.GetUser(id)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
-
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -61,7 +55,7 @@ func (server *Server) updateUser(ctx *gin.Context) {
 
 	id := ctx.Param("id")
 	if err := server.db.UpdateUser(arg, id); err != nil {
-		if err == mongo.ErrNoDocuments {
+		if err.Error() == "user not found" {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}

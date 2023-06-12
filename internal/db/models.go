@@ -84,9 +84,9 @@ type User struct {
 type VoteStatus int
 
 const (
-	NoVote VoteStatus = iota
+	Downvote VoteStatus = iota
+	NoVote
 	Upvote
-	Downvote
 )
 
 type UserProblemHistory struct {

@@ -93,7 +93,11 @@ func (db *MongoDB) UpdateUser(arg UpdateUserParams, id string) error {
 		"display_name": arg.DisplayName,
 		"languages":    arg.Languages,
 	}}
-	_, err = collection.UpdateOne(context.Background(), filter, update)
+	result, err := collection.UpdateOne(context.Background(), filter, update)
+
+	if result.MatchedCount == 0 {
+		return errors.New("user not found")
+	}
 
 	return err
 }

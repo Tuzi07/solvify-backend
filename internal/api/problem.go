@@ -5,7 +5,6 @@ import (
 
 	"github.com/Tuzi07/solvify-backend/internal/db"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (server *Server) setupProblemRoutes() {
@@ -25,6 +24,8 @@ func (server *Server) setupProblemRoutes() {
 		problemGroup.GET("", server.listProblems)
 		problemGroup.POST("/:id", server.updateProblem)
 		problemGroup.DELETE("/:id", server.deleteProblem)
+
+		problemGroup.POST("/vote/", server.voteProblem)
 	}
 }
 
@@ -101,11 +102,6 @@ func (server *Server) getProblem(ctx *gin.Context) {
 
 	problem, err := server.db.GetProblem(id)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
-
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -148,7 +144,7 @@ func (server *Server) updateProblem(ctx *gin.Context) {
 
 	id := ctx.Param("id")
 	if err := server.db.UpdateProblem(arg, id); err != nil {
-		if err == mongo.ErrNoDocuments {
+		if err.Error() == "problem not found" {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
@@ -238,4 +234,24 @@ func (server *Server) solveMSProblem(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, result)
+}
+
+func (server *Server) voteProblem(ctx *gin.Context) {
+	var arg db.VoteProblemParams
+	if err := ctx.ShouldBindJSON(&arg); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	if err := server.db.VoteProblem(arg); err != nil {
+		if err.Error() == "problem not found" {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, arg)
 }

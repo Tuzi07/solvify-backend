@@ -5,7 +5,6 @@ import (
 
 	"github.com/Tuzi07/solvify-backend/internal/db"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (server *Server) setupProblemListRoutes() {
@@ -41,11 +40,6 @@ func (server *Server) getProblemList(ctx *gin.Context) {
 
 	problemList, err := server.db.GetProblemList(id)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
-
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -88,7 +82,7 @@ func (server *Server) updateProblemList(ctx *gin.Context) {
 
 	id := ctx.Param("id")
 	if err := server.db.UpdateProblemList(arg, id); err != nil {
-		if err == mongo.ErrNoDocuments {
+		if err.Error() == "problem list not found" {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}

@@ -115,7 +115,11 @@ func (db *MongoDB) UpdateProblemList(arg UpdateProblemListParams, id string) err
 		"description": arg.Description,
 		"language":    arg.Language,
 	}}
-	_, err = collection.UpdateOne(context.Background(), filter, update)
+	result, err := collection.UpdateOne(context.Background(), filter, update)
+
+	if result.MatchedCount == 0 {
+		return errors.New("list not found")
+	}
 
 	return err
 }

@@ -25,6 +25,8 @@ type ProblemDatabase interface {
 	UpdateProblem(arg UpdateProblemParams, id string) error
 	DeleteProblem(id string) error
 	ListProblems(arg ListProblemsParams) ([]AnyProblem, error)
+
+	VoteProblem(arg VoteProblemParams) error
 }
 
 type CreateProblemParams struct {
@@ -199,7 +201,11 @@ func (db *MongoDB) UpdateProblem(arg UpdateProblemParams, id string) error {
 		"level_of_education": arg.LevelOfEducation,
 		"language":           arg.Language,
 	}}
-	_, err = collection.UpdateOne(context.Background(), filter, update)
+	result, err := collection.UpdateOne(context.Background(), filter, update)
+
+	if result.MatchedCount == 0 {
+		return errors.New("problem not found")
+	}
 
 	return err
 }
@@ -279,9 +285,9 @@ func (db *MongoDB) SolveTFProblem(arg SolveTFProblemParams) (TFProblemAttempt, e
 	update := bson.M{
 		"$push": bson.M{"problem_attempts_ids": id},
 		"$setOnInsert": bson.M{
-			"user_id":    arg.UserID,
-			"problem_id": arg.ProblemId,
-			"VoteStatus": NoVote,
+			"user_id":     arg.UserID,
+			"problem_id":  arg.ProblemId,
+			"vote_status": NoVote,
 		},
 	}
 	options := options.Update().SetUpsert(true)
@@ -331,9 +337,9 @@ func (db *MongoDB) SolveMTFProblem(arg SolveMTFProblemParams) (MTFProblemAttempt
 	update := bson.M{
 		"$push": bson.M{"problem_attempts_ids": id},
 		"$setOnInsert": bson.M{
-			"user_id":    arg.UserID,
-			"problem_id": arg.ProblemId,
-			"VoteStatus": NoVote,
+			"user_id":     arg.UserID,
+			"problem_id":  arg.ProblemId,
+			"vote_status": NoVote,
 		},
 	}
 	options := options.Update().SetUpsert(true)
@@ -395,9 +401,9 @@ func (db *MongoDB) SolveMCProblem(arg SolveMCProblemParams) (MCProblemAttempt, e
 	update := bson.M{
 		"$push": bson.M{"problem_attempts_ids": id},
 		"$setOnInsert": bson.M{
-			"user_id":    arg.UserID,
-			"problem_id": arg.ProblemId,
-			"VoteStatus": NoVote,
+			"user_id":     arg.UserID,
+			"problem_id":  arg.ProblemId,
+			"vote_status": NoVote,
 		},
 	}
 	options := options.Update().SetUpsert(true)
@@ -447,9 +453,9 @@ func (db *MongoDB) SolveMSProblem(arg SolveMSProblemParams) (MSProblemAttempt, e
 	update := bson.M{
 		"$push": bson.M{"problem_attempts_ids": id},
 		"$setOnInsert": bson.M{
-			"user_id":    arg.UserID,
-			"problem_id": arg.ProblemId,
-			"VoteStatus": NoVote,
+			"user_id":     arg.UserID,
+			"problem_id":  arg.ProblemId,
+			"vote_status": NoVote,
 		},
 	}
 	options := options.Update().SetUpsert(true)
@@ -466,4 +472,55 @@ func msProblemAttemptFromParams(arg SolveMSProblemParams) MSProblemAttempt {
 		},
 		ItemResponses: arg.ItemResponses,
 	}
+}
+
+type VoteProblemParams struct {
+	UserID     string      `json:"user_id" binding:"required"`
+	ProblemId  string      `json:"problem_id" binding:"required"`
+	VoteStatus *VoteStatus `json:"vote_status" binding:"required"`
+}
+
+func (db *MongoDB) VoteProblem(arg VoteProblemParams) error {
+	var userProblemHistory UserProblemHistory
+	collection := db.client.Database("solvify").Collection("user_problem_histories")
+	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemId}
+	err := collection.FindOne(context.Background(), filter).Decode(&userProblemHistory)
+	if err != nil {
+		return err
+	}
+
+	if userProblemHistory.VoteStatus == *arg.VoteStatus {
+		return nil
+	}
+
+	update := bson.M{"$set": bson.M{"vote_status": *arg.VoteStatus}}
+	_, err = collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	collection = db.client.Database("solvify").Collection("problems")
+	objectID, err := primitive.ObjectIDFromHex(arg.ProblemId)
+	if err != nil {
+		return err
+	}
+
+	filter = bson.M{"_id": objectID}
+	if userProblemHistory.VoteStatus == Upvote {
+		update = bson.M{"$inc": bson.M{"upvotes": -1}}
+		_, err = collection.UpdateOne(context.Background(), filter, update)
+	} else if userProblemHistory.VoteStatus == Downvote {
+		update = bson.M{"$inc": bson.M{"downvotes": -1}}
+		_, err = collection.UpdateOne(context.Background(), filter, update)
+	}
+
+	if *arg.VoteStatus == Upvote {
+		update = bson.M{"$inc": bson.M{"upvotes": 1}}
+		_, err = collection.UpdateOne(context.Background(), filter, update)
+	} else if *arg.VoteStatus == Downvote {
+		update = bson.M{"$inc": bson.M{"downvotes": 1}}
+		_, err = collection.UpdateOne(context.Background(), filter, update)
+	}
+
+	return err
 }
