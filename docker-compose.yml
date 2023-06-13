@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  solvify-api:
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      MONGODB_URI: "mongodb+srv://tuzi:GJKX2T1ybZU8W6wT@solvify.r5ehjjx.mongodb.net"
+    build:
+      context: .
+      dockerfile: "build/Dockerfile"

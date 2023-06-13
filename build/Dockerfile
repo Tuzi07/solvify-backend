@@ -1,13 +1,12 @@
 # syntax=docker/dockerfile:1
-FROM golang:1.20-alpine
+FROM golang:latest
 WORKDIR /go/src/app
 
 EXPOSE 8080
-COPY go.mod go.sum ./
+COPY go.mod go.sum Makefile ./
 RUN go mod download
 
 COPY cmd/ cmd/
 COPY internal/ internal/
-RUN go build .
 
-CMD ["./solvify-backend"]
+CMD ["make", "run"]
