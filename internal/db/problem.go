@@ -27,14 +27,15 @@ type ProblemDatabase interface {
 	ListProblems(arg ListProblemsParams) ([]AnyProblem, error)
 
 	VoteProblem(arg VoteProblemParams) error
+	CreateProblemReport(arg ReportProblemParams) (ProblemReport, error)
 }
 
 type CreateProblemParams struct {
 	Statement        string `json:"statement" binding:"required"`
 	Feedback         string `json:"feedback"`
-	SubjectId        string `json:"subject_id"`
-	TopicId          string `json:"topic_id"`
-	SubtopicId       string `json:"subtopic_id"`
+	SubjectID        string `json:"subject_id"`
+	TopicID          string `json:"topic_id"`
+	SubtopicID       string `json:"subtopic_id"`
 	LevelOfEducation string `json:"level_of_education"`
 	Language         string `json:"language" binding:"required,language"`
 	CreatorID        string `json:"creator_id" binding:"required"`
@@ -68,9 +69,9 @@ func problemFromCreateParams(arg CreateProblemParams, problemType ProblemType) P
 	return Problem{
 		Statement:        arg.Statement,
 		Feedback:         arg.Feedback,
-		SubjectId:        arg.SubjectId,
-		TopicId:          arg.TopicId,
-		SubtopicId:       arg.SubtopicId,
+		SubjectID:        arg.SubjectID,
+		TopicID:          arg.TopicID,
+		SubtopicID:       arg.SubtopicID,
 		LevelOfEducation: arg.LevelOfEducation,
 		Language:         arg.Language,
 		CreatorID:        arg.CreatorID,
@@ -180,9 +181,9 @@ func (db *MongoDB) GetProblem(id string) (AnyProblem, error) {
 
 type UpdateProblemParams struct {
 	Feedback         string `json:"feedback"`
-	SubjectId        string `json:"subject_id"`
-	TopicId          string `json:"topic_id"`
-	SubtopicId       string `json:"subtopic_id"`
+	SubjectID        string `json:"subject_id"`
+	TopicID          string `json:"topic_id"`
+	SubtopicID       string `json:"subtopic_id"`
 	LevelOfEducation string `json:"level_of_education"`
 	Language         string `json:"language" binding:"language"`
 }
@@ -197,9 +198,9 @@ func (db *MongoDB) UpdateProblem(arg UpdateProblemParams, id string) error {
 	filter := bson.M{"_id": objectID}
 	update := bson.M{"$set": bson.M{
 		"feedback":           arg.Feedback,
-		"subject_id":         arg.SubjectId,
-		"topic_id":           arg.TopicId,
-		"subtopic_id":        arg.SubtopicId,
+		"subject_id":         arg.SubjectID,
+		"topic_id":           arg.TopicID,
+		"subtopic_id":        arg.SubtopicID,
 		"level_of_education": arg.LevelOfEducation,
 		"language":           arg.Language,
 	}}
@@ -265,7 +266,7 @@ func (db *MongoDB) ListProblems(arg ListProblemsParams) ([]AnyProblem, error) {
 
 type SolveTFProblemParams struct {
 	UserID       string `json:"user_id" binding:"required"`
-	ProblemId    string `json:"problem_id" binding:"required"`
+	ProblemID    string `json:"problem_id" binding:"required"`
 	BoolAnswer   *bool  `json:"bool_answer" binding:"required"`
 	BoolResponse *bool  `json:"bool_response" binding:"required"`
 }
@@ -283,12 +284,12 @@ func (db *MongoDB) SolveTFProblem(arg SolveTFProblemParams) (TFProblemAttempt, e
 	attempt.ID = id
 
 	collection = db.client.Database("solvify").Collection("user_problem_histories")
-	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemId}
+	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemID}
 	update := bson.M{
 		"$push": bson.M{"problem_attempts_ids": id},
 		"$setOnInsert": bson.M{
 			"user_id":     arg.UserID,
-			"problem_id":  arg.ProblemId,
+			"problem_id":  arg.ProblemID,
 			"vote_status": NoVote,
 		},
 	}
@@ -317,7 +318,7 @@ func tfSolutionAccuracy(answer bool, response bool) SolutionAccuracy {
 
 type SolveMTFProblemParams struct {
 	UserID        string `json:"user_id" binding:"required"`
-	ProblemId     string `json:"problem_id" binding:"required"`
+	ProblemID     string `json:"problem_id" binding:"required"`
 	BoolAnswers   []bool `json:"bool_answers" binding:"required"`
 	BoolResponses []bool `json:"bool_responses" binding:"required"`
 }
@@ -335,12 +336,12 @@ func (db *MongoDB) SolveMTFProblem(arg SolveMTFProblemParams) (MTFProblemAttempt
 	attempt.ID = id
 
 	collection = db.client.Database("solvify").Collection("user_problem_histories")
-	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemId}
+	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemID}
 	update := bson.M{
 		"$push": bson.M{"problem_attempts_ids": id},
 		"$setOnInsert": bson.M{
 			"user_id":     arg.UserID,
-			"problem_id":  arg.ProblemId,
+			"problem_id":  arg.ProblemID,
 			"vote_status": NoVote,
 		},
 	}
@@ -381,7 +382,7 @@ func mtfSolutionAccuracy(answers []bool, responses []bool) SolutionAccuracy {
 
 type SolveMCProblemParams struct {
 	UserID       string `json:"user_id" binding:"required"`
-	ProblemId    string `json:"problem_id" binding:"required"`
+	ProblemID    string `json:"problem_id" binding:"required"`
 	CorrectItem  *int   `json:"correct_item" binding:"required"`
 	ItemResponse *int   `json:"item_response" binding:"required"`
 }
@@ -399,12 +400,12 @@ func (db *MongoDB) SolveMCProblem(arg SolveMCProblemParams) (MCProblemAttempt, e
 	attempt.ID = id
 
 	collection = db.client.Database("solvify").Collection("user_problem_histories")
-	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemId}
+	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemID}
 	update := bson.M{
 		"$push": bson.M{"problem_attempts_ids": id},
 		"$setOnInsert": bson.M{
 			"user_id":     arg.UserID,
-			"problem_id":  arg.ProblemId,
+			"problem_id":  arg.ProblemID,
 			"vote_status": NoVote,
 		},
 	}
@@ -433,7 +434,7 @@ func mcSolutionAccuracy(answer int, response int) SolutionAccuracy {
 
 type SolveMSProblemParams struct {
 	UserID        string `json:"user_id" binding:"required"`
-	ProblemId     string `json:"problem_id" binding:"required"`
+	ProblemID     string `json:"problem_id" binding:"required"`
 	CorrectItems  []bool `json:"correct_items" binding:"required"`
 	ItemResponses []bool `json:"item_responses" binding:"required"`
 }
@@ -451,12 +452,12 @@ func (db *MongoDB) SolveMSProblem(arg SolveMSProblemParams) (MSProblemAttempt, e
 	attempt.ID = id
 
 	collection = db.client.Database("solvify").Collection("user_problem_histories")
-	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemId}
+	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemID}
 	update := bson.M{
 		"$push": bson.M{"problem_attempts_ids": id},
 		"$setOnInsert": bson.M{
 			"user_id":     arg.UserID,
-			"problem_id":  arg.ProblemId,
+			"problem_id":  arg.ProblemID,
 			"vote_status": NoVote,
 		},
 	}
@@ -478,14 +479,14 @@ func msProblemAttemptFromParams(arg SolveMSProblemParams) MSProblemAttempt {
 
 type VoteProblemParams struct {
 	UserID     string      `json:"user_id" binding:"required"`
-	ProblemId  string      `json:"problem_id" binding:"required"`
+	ProblemID  string      `json:"problem_id" binding:"required"`
 	VoteStatus *VoteStatus `json:"vote_status" binding:"required"`
 }
 
 func (db *MongoDB) VoteProblem(arg VoteProblemParams) error {
 	var userProblemHistory UserProblemHistory
 	collection := db.client.Database("solvify").Collection("user_problem_histories")
-	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemId}
+	filter := bson.M{"user_id": arg.UserID, "problem_id": arg.ProblemID}
 	err := collection.FindOne(context.Background(), filter).Decode(&userProblemHistory)
 	if err != nil {
 		return err
@@ -502,7 +503,7 @@ func (db *MongoDB) VoteProblem(arg VoteProblemParams) error {
 	}
 
 	collection = db.client.Database("solvify").Collection("problems")
-	objectID, err := primitive.ObjectIDFromHex(arg.ProblemId)
+	objectID, err := primitive.ObjectIDFromHex(arg.ProblemID)
 	if err != nil {
 		return err
 	}
@@ -525,4 +526,31 @@ func (db *MongoDB) VoteProblem(arg VoteProblemParams) error {
 	}
 
 	return err
+}
+
+type ReportProblemParams struct {
+	ProblemID string `json:"problem_id" binding:"required"`
+	UserID    string `json:"user_id" binding:"required"`
+	Reason    string `json:"reason" binding:"required"`
+}
+
+func reportFromParams(arg ReportProblemParams) ProblemReport {
+	return ProblemReport{
+		ProblemID:  arg.ProblemID,
+		UserID:     arg.UserID,
+		Reason:     arg.Reason,
+		ReportedAt: time.Now(),
+	}
+}
+
+func (db *MongoDB) CreateProblemReport(arg ReportProblemParams) (ProblemReport, error) {
+	report := reportFromParams(arg)
+
+	collection := db.client.Database("solvify").Collection("problem_reports")
+	result, err := collection.InsertOne(context.Background(), report)
+
+	id := result.InsertedID.(primitive.ObjectID).Hex()
+	report.ID = id
+
+	return report, err
 }

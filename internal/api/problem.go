@@ -26,6 +26,7 @@ func (server *Server) setupProblemRoutes() {
 		problemGroup.DELETE("/:id", server.deleteProblem)
 
 		problemGroup.POST("/vote/", server.voteProblem)
+		problemGroup.POST("/report/", server.reportProblem)
 	}
 }
 
@@ -254,4 +255,20 @@ func (server *Server) voteProblem(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, arg)
+}
+
+func (server *Server) reportProblem(ctx *gin.Context) {
+	var arg db.ReportProblemParams
+	if err := ctx.ShouldBindJSON(&arg); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	report, err := server.db.CreateProblemReport(arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, report)
 }

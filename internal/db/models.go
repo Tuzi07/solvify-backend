@@ -22,9 +22,9 @@ type Problem struct {
 	Downvotes      int         `json:"downvotes" bson:"downvotes"`
 
 	Feedback         string `json:"feedback" bson:"feedback"`
-	SubjectId        string `json:"subject_id" bson:"subject_id"`
-	TopicId          string `json:"topic_id" bson:"topic_id"`
-	SubtopicId       string `json:"subtopic_id" bson:"subtopic_id"`
+	SubjectID        string `json:"subject_id" bson:"subject_id"`
+	TopicID          string `json:"topic_id" bson:"topic_id"`
+	SubtopicID       string `json:"subtopic_id" bson:"subtopic_id"`
 	LevelOfEducation string `json:"level_of_education" bson:"level_of_education"`
 	Language         string `json:"language" bson:"language"`
 
@@ -153,18 +153,18 @@ type Subject struct {
 type Topic struct {
 	ID        string `json:"_id" bson:"_id,omitempty"`
 	Name      string `json:"name" bson:"name"`
-	SubjectId string `json:"subject_id" bson:"subject_id"`
+	SubjectID string `json:"subject_id" bson:"subject_id"`
 }
 
 type Subtopic struct {
 	ID      string `json:"_id" bson:"_id,omitempty"`
 	Name    string `json:"name" bson:"name"`
-	TopicId string `json:"topic_id" bson:"topic_id"`
+	TopicID string `json:"topic_id" bson:"topic_id"`
 }
 
 type ProblemReport struct {
 	ID         string    `json:"_id" bson:"_id,omitempty"`
-	ProblemId  string    `json:"problem_id" bson:"problem_id"`
+	ProblemID  string    `json:"problem_id" bson:"problem_id"`
 	UserID     string    `json:"user_id" bson:"user_id"`
 	ReportedAt time.Time `json:"reported_at" bson:"reported_at"`
 	Reason     string    `json:"reason" bson:"reason"`
@@ -172,7 +172,7 @@ type ProblemReport struct {
 
 type ListReport struct {
 	ID         string    `json:"_id" bson:"_id,omitempty"`
-	ListId     string    `json:"list_id" bson:"list_id"`
+	ListID     string    `json:"list_id" bson:"list_id"`
 	UserID     string    `json:"user_id" bson:"user_id"`
 	ReportedAt time.Time `json:"reported_at" bson:"reported_at"`
 	Reason     string    `json:"reason" bson:"reason"`
