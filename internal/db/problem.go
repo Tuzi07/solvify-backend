@@ -38,6 +38,7 @@ type CreateProblemParams struct {
 	LevelOfEducation string `json:"level_of_education"`
 	Language         string `json:"language" binding:"required,language"`
 	CreatorID        string `json:"creator_id" binding:"required"`
+	CreatorUsername  string `json:"creator_username" binding:"required"`
 }
 
 type CreateTFProblemParams struct {
@@ -73,6 +74,7 @@ func problemFromCreateParams(arg CreateProblemParams, problemType ProblemType) P
 		LevelOfEducation: arg.LevelOfEducation,
 		Language:         arg.Language,
 		CreatorID:        arg.CreatorID,
+		CreatorUsername:  arg.CreatorUsername,
 
 		ProblemType:    problemType,
 		CreatedAt:      time.Now(),

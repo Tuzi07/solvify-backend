@@ -28,8 +28,9 @@ type Problem struct {
 	LevelOfEducation string `json:"level_of_education" bson:"level_of_education"`
 	Language         string `json:"language" bson:"language"`
 
-	Statement string `json:"statement" bson:"statement"`
-	CreatorID string `json:"creator_id" bson:"creator_id"`
+	Statement       string `json:"statement" bson:"statement"`
+	CreatorID       string `json:"creator_id" bson:"creator_id"`
+	CreatorUsername string `json:"creator_username" bson:"creator_username"`
 }
 
 // TFProblem represents a True False Problem
