@@ -70,6 +70,7 @@ type AnyProblem struct {
 
 type User struct {
 	ID          string    `json:"_id" bson:"_id,omitempty"`
+	Email       string    `json:"email" bson:"email"`
 	Username    string    `json:"username" bson:"username"`
 	DisplayName string    `json:"display_name" bson:"display_name"`
 	Languages   []string  `json:"languages" bson:"languages"`
