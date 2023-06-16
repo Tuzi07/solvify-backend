@@ -20,3 +20,11 @@ func IsFieldToOrderProblems(field string) bool {
 	}
 	return false
 }
+
+func IsLevelOfEducation(level string) bool {
+	switch level {
+	case "primary", "secondary", "higher":
+		return true
+	}
+	return false
+}

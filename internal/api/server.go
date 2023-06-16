@@ -27,6 +27,7 @@ func (server *Server) buildAPIRouter() {
 		v.RegisterValidation("language", validLanguage)
 		v.RegisterValidation("languages", validLanguages)
 		v.RegisterValidation("field_to_order_problems", validFieldToOrderProblems)
+		v.RegisterValidation("level_of_education", validLevelOfEducation)
 	}
 
 	config := cors.DefaultConfig()

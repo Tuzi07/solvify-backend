@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -87,6 +88,10 @@ func topicFromParams(arg CreateTopicParams) Topic {
 func (db *MongoDB) CreateTopic(arg CreateTopicParams) (Topic, error) {
 	topic := topicFromParams(arg)
 
+	if !db.isUniqueTopic(topic.Name) {
+		return topic, errors.New("topic already exists")
+	}
+
 	collection := db.client.Database("solvify").Collection("topics")
 	result, err := collection.InsertOne(context.Background(), topic)
 
@@ -94,6 +99,16 @@ func (db *MongoDB) CreateTopic(arg CreateTopicParams) (Topic, error) {
 	topic.ID = id
 
 	return topic, err
+}
+
+func (db *MongoDB) isUniqueTopic(topic string) bool {
+	collection := db.client.Database("solvify").Collection("topics")
+	filter := bson.D{{Key: "name", Value: topic}}
+	count, err := collection.CountDocuments(context.Background(), filter)
+	if err != nil {
+		return false
+	}
+	return count == 0
 }
 
 func (db *MongoDB) GetTopic(id string) (Topic, error) {
@@ -143,6 +158,10 @@ func subtopicFromParams(arg CreateSubtopicParams) Subtopic {
 func (db *MongoDB) CreateSubtopic(arg CreateSubtopicParams) (Subtopic, error) {
 	subtopic := subtopicFromParams(arg)
 
+	if !db.isUniqueSubtopic(subtopic.Name) {
+		return subtopic, errors.New("subtopic already exists")
+	}
+
 	collection := db.client.Database("solvify").Collection("subtopics")
 	result, err := collection.InsertOne(context.Background(), subtopic)
 
@@ -150,6 +169,16 @@ func (db *MongoDB) CreateSubtopic(arg CreateSubtopicParams) (Subtopic, error) {
 	subtopic.ID = id
 
 	return subtopic, err
+}
+
+func (db *MongoDB) isUniqueSubtopic(subtopic string) bool {
+	collection := db.client.Database("solvify").Collection("subtopics")
+	filter := bson.D{{Key: "name", Value: subtopic}}
+	count, err := collection.CountDocuments(context.Background(), filter)
+	if err != nil {
+		return false
+	}
+	return count == 0
 }
 
 func (db *MongoDB) GetSubtopic(id string) (Subtopic, error) {

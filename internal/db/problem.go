@@ -36,7 +36,7 @@ type CreateProblemParams struct {
 	SubjectID        string `json:"subject_id"`
 	TopicID          string `json:"topic_id"`
 	SubtopicID       string `json:"subtopic_id"`
-	LevelOfEducation string `json:"level_of_education"`
+	LevelOfEducation string `json:"level_of_education" binding:"level_of_education"`
 	Language         string `json:"language" binding:"required,language"`
 	CreatorID        string `json:"creator_id" binding:"required"`
 	CreatorUsername  string `json:"creator_username" binding:"required"`
@@ -184,7 +184,7 @@ type UpdateProblemParams struct {
 	SubjectID        string `json:"subject_id"`
 	TopicID          string `json:"topic_id"`
 	SubtopicID       string `json:"subtopic_id"`
-	LevelOfEducation string `json:"level_of_education"`
+	LevelOfEducation string `json:"level_of_education" binding:"level_of_education"`
 	Language         string `json:"language" binding:"language"`
 }
 
@@ -245,7 +245,7 @@ type ListProblemsParams struct {
 	SubjectFilter          string `json:"subject_id"`
 	TopicFilter            string `json:"topic_id"`
 	SubtopicFilter         string `json:"subtopic_id"`
-	LevelOfEducationFilter string `json:"level_of_education"`
+	LevelOfEducationFilter string `json:"level_of_education" binding:"level_of_education"`
 	LanguageFilter         string `json:"language" binding:"language"`
 }
 

@@ -30,3 +30,10 @@ var validFieldToOrderProblems validator.Func = func(fieldLevel validator.FieldLe
 	}
 	return false
 }
+
+var validLevelOfEducation validator.Func = func(fieldLevel validator.FieldLevel) bool {
+	if level, ok := fieldLevel.Field().Interface().(string); ok {
+		return util.IsLevelOfEducation(level)
+	}
+	return false
+}

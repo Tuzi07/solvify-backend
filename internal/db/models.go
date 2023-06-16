@@ -177,3 +177,17 @@ type ListReport struct {
 	ReportedAt time.Time `json:"reported_at" bson:"reported_at"`
 	Reason     string    `json:"reason" bson:"reason"`
 }
+
+type ProblemEditSuggestion struct {
+	ID          string    `json:"_id" bson:"_id,omitempty"`
+	ProblemID   string    `json:"problem_id" bson:"problem_id"`
+	UserID      string    `json:"user_id" bson:"user_id"`
+	SuggestedAt time.Time `json:"suggested_at" bson:"suggested_at"`
+
+	Feedback         string `json:"feedback" bson:"feedback"`
+	SubjectID        string `json:"subject_id" bson:"subject_id"`
+	TopicID          string `json:"topic_id" bson:"topic_id"`
+	SubtopicID       string `json:"subtopic_id" bson:"subtopic_id"`
+	LevelOfEducation string `json:"level_of_education" bson:"level_of_education"`
+	Language         string `json:"language" bson:"language"`
+}
