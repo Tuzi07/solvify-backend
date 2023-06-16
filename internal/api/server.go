@@ -36,6 +36,7 @@ func (server *Server) buildAPIRouter() {
 	server.setupProblemRoutes()
 	server.setupUserRoutes()
 	server.setupProblemListRoutes()
+	server.setupLabelsRoutes()
 }
 
 func (server *Server) Start() error {

@@ -25,8 +25,8 @@ func (server *Server) setupProblemRoutes() {
 		problemGroup.POST("/:id", server.updateProblem)
 		problemGroup.DELETE("/:id", server.deleteProblem)
 
-		problemGroup.POST("/vote/", server.voteProblem)
-		problemGroup.POST("/report/", server.reportProblem)
+		problemGroup.POST("/vote", server.voteProblem)
+		problemGroup.POST("/report", server.reportProblem)
 	}
 }
 

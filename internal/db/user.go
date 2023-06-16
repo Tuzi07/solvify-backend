@@ -24,7 +24,7 @@ type CreateUserParams struct {
 	Languages   []string `json:"languages" binding:"required,languages"`
 }
 
-func UserFromParams(arg CreateUserParams) User {
+func userFromParams(arg CreateUserParams) User {
 	return User{
 		Username:    arg.Username,
 		Email:       arg.Email,
@@ -40,7 +40,7 @@ func UserFromParams(arg CreateUserParams) User {
 }
 
 func (db *MongoDB) CreateUser(arg CreateUserParams) (User, error) {
-	user := UserFromParams(arg)
+	user := userFromParams(arg)
 
 	if !db.isUniqueUsername(user.Username) {
 		return user, errors.New("username already exists")
