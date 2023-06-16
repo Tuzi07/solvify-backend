@@ -377,6 +377,8 @@ func (db *MongoDB) SolveTFProblem(arg SolveTFProblemParams) (TFProblemAttempt, e
 func tfProblemAttemptFromParams(arg SolveTFProblemParams) TFProblemAttempt {
 	return TFProblemAttempt{
 		ProblemAttempt: ProblemAttempt{
+			UserID:           arg.UserID,
+			ProblemID:        arg.ProblemID,
 			AttemptedAt:      time.Now(),
 			SolutionAccuracy: tfSolutionAccuracy(*arg.BoolAnswer, *arg.BoolResponse),
 		},
@@ -464,6 +466,8 @@ func (db *MongoDB) SolveMTFProblem(arg SolveMTFProblemParams) (MTFProblemAttempt
 func mtfProblemAttemptFromParams(arg SolveMTFProblemParams) MTFProblemAttempt {
 	return MTFProblemAttempt{
 		ProblemAttempt: ProblemAttempt{
+			UserID:           arg.UserID,
+			ProblemID:        arg.ProblemID,
 			AttemptedAt:      time.Now(),
 			SolutionAccuracy: mtfSolutionAccuracy(arg.BoolAnswers, arg.BoolResponses),
 		},
@@ -532,6 +536,8 @@ func (db *MongoDB) SolveMCProblem(arg SolveMCProblemParams) (MCProblemAttempt, e
 func mcProblemAttemptFromParams(arg SolveMCProblemParams) MCProblemAttempt {
 	return MCProblemAttempt{
 		ProblemAttempt: ProblemAttempt{
+			UserID:           arg.UserID,
+			ProblemID:        arg.ProblemID,
 			AttemptedAt:      time.Now(),
 			SolutionAccuracy: mcSolutionAccuracy(*arg.CorrectItem, *arg.ItemResponse),
 		},
@@ -588,6 +594,8 @@ func (db *MongoDB) SolveMSProblem(arg SolveMSProblemParams) (MSProblemAttempt, e
 func msProblemAttemptFromParams(arg SolveMSProblemParams) MSProblemAttempt {
 	return MSProblemAttempt{
 		ProblemAttempt: ProblemAttempt{
+			UserID:           arg.UserID,
+			ProblemID:        arg.ProblemID,
 			AttemptedAt:      time.Now(),
 			SolutionAccuracy: mtfSolutionAccuracy(arg.CorrectItems, arg.ItemResponses),
 		},

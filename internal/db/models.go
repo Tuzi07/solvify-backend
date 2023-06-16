@@ -66,7 +66,7 @@ type AnyProblem struct {
 	Items        []string `json:"items" bson:"items,omitempty"`
 	BoolAnswers  []bool   `json:"bool_answers" bson:"bool_answers,omitempty"`
 	CorrectItem  int      `json:"correct_item" bson:"correct_item,omitempty"`
-	CorrectItems []bool    `json:"correct_items" bson:"correct_items,omitempty"`
+	CorrectItems []bool   `json:"correct_items" bson:"correct_items,omitempty"`
 }
 
 type User struct {
@@ -109,6 +109,8 @@ const (
 
 type ProblemAttempt struct {
 	ID               string           `json:"_id" bson:"_id,omitempty"`
+	UserID           string           `json:"user_id" bson:"user_id"`
+	ProblemID        string           `json:"problem_id" bson:"problem_id"`
 	AttemptedAt      time.Time        `json:"attempted_at" bson:"attempted_at"`
 	SolutionAccuracy SolutionAccuracy `json:"solution_accuracy" bson:"solution_accuracy"`
 }

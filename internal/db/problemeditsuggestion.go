@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -27,6 +28,7 @@ func suggestionFromParams(arg CreateProblemEditSuggestionParams) ProblemEditSugg
 	return ProblemEditSuggestion{
 		ProblemID:       arg.ProblemID,
 		CreatorUsername: arg.CreatorUsername,
+		SuggestedAt:     time.Now(),
 
 		Feedback:         arg.Feedback,
 		SubjectID:        arg.SubjectID,
