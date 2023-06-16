@@ -247,6 +247,7 @@ type ListProblemsParams struct {
 	SubtopicFilter         string `json:"subtopic_id"`
 	LevelOfEducationFilter string `json:"level_of_education" binding:"level_of_education"`
 	LanguageFilter         string `json:"language" binding:"language"`
+	CreatorIDFilter        string `json:"creator_id"`
 }
 
 // ListProblems returns a list of problems.
@@ -301,6 +302,9 @@ func filterFromParams(arg ListProblemsParams) bson.M {
 	}
 	if arg.LanguageFilter != "" {
 		filter["language"] = arg.LanguageFilter
+	}
+	if arg.CreatorIDFilter != "" {
+		filter["creator_id"] = arg.CreatorIDFilter
 	}
 
 	return filter
