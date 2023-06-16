@@ -66,7 +66,7 @@ type AnyProblem struct {
 	Items        []string `json:"items" bson:"items,omitempty"`
 	BoolAnswers  []bool   `json:"bool_answers" bson:"bool_answers,omitempty"`
 	CorrectItem  int      `json:"correct_item" bson:"correct_item,omitempty"`
-	CorrectItems []int    `json:"correct_items" bson:"correct_items,omitempty"`
+	CorrectItems []bool    `json:"correct_items" bson:"correct_items,omitempty"`
 }
 
 type User struct {
