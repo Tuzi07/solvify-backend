@@ -23,3 +23,10 @@ var validLanguages validator.Func = func(fieldLevel validator.FieldLevel) bool {
 	}
 	return false
 }
+
+var validFieldToOrderProblems validator.Func = func(fieldLevel validator.FieldLevel) bool {
+	if field, ok := fieldLevel.Field().Interface().(string); ok {
+		return util.IsFieldToOrderProblems(field)
+	}
+	return false
+}

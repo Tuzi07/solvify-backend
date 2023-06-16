@@ -12,3 +12,11 @@ func IsSupportedLanguage(language string) bool {
 	}
 	return false
 }
+
+func IsFieldToOrderProblems(field string) bool {
+	switch field {
+	case "created_at", "attempts", "accuracy", "upvotes":
+		return true
+	}
+	return false
+}

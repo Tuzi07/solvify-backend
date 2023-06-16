@@ -26,6 +26,7 @@ func (server *Server) buildAPIRouter() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("language", validLanguage)
 		v.RegisterValidation("languages", validLanguages)
+		v.RegisterValidation("field_to_order_problems", validFieldToOrderProblems)
 	}
 
 	config := cors.DefaultConfig()

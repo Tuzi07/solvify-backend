@@ -230,18 +230,35 @@ func (db *MongoDB) DeleteProblem(id string) error {
 	return err
 }
 
-type ListProblemsParams struct {
+type PaginationParams struct {
 	Limit int32 `form:"limit"`
 	Skip  int32 `form:"skip"`
 }
 
-func (db *MongoDB) ListProblems(arg ListProblemsParams) ([]AnyProblem, error) {
-	findOptions := options.Find()
-	findOptions.SetLimit(int64(arg.Limit))
-	findOptions.SetSkip(int64(arg.Skip))
+type ListProblemsParams struct {
+	PaginationParams
 
+	OrderBy    string `json:"order_by" binding:"field_to_order_problems"`
+	Descending *bool  `json:"descending"`
+
+	ProblemTypeFilter      *int   `json:"problem_type"`
+	SubjectFilter          string `json:"subject_id"`
+	TopicFilter            string `json:"topic_id"`
+	SubtopicFilter         string `json:"subtopic_id"`
+	LevelOfEducationFilter string `json:"level_of_education"`
+	LanguageFilter         string `json:"language" binding:"language"`
+}
+
+// ListProblems returns a list of problems.
+// The returned list is ordered by the field specified in the `order_by` parameter.
+// order_by can be one of the following values: "created_at", "attempts", "accuracy", "upvotes"
+// The Filter can be empty. If a filter is empty, it is ignored.
+func (db *MongoDB) ListProblems(arg ListProblemsParams) ([]AnyProblem, error) {
 	collection := db.client.Database("solvify").Collection("problems")
-	cursor, err := collection.Find(context.Background(), bson.M{}, findOptions)
+	filter := filterFromParams(arg)
+	findOptions := optionsFromParams(arg)
+
+	cursor, err := collection.Find(context.Background(), filter, findOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -262,6 +279,55 @@ func (db *MongoDB) ListProblems(arg ListProblemsParams) ([]AnyProblem, error) {
 	}
 
 	return problems, err
+}
+
+func filterFromParams(arg ListProblemsParams) bson.M {
+	filter := bson.M{}
+
+	if arg.ProblemTypeFilter != nil {
+		filter["problem_type"] = arg.ProblemTypeFilter
+	}
+	if arg.SubjectFilter != "" {
+		filter["subject_id"] = arg.SubjectFilter
+	}
+	if arg.TopicFilter != "" {
+		filter["topic_id"] = arg.TopicFilter
+	}
+	if arg.SubtopicFilter != "" {
+		filter["subtopic_id"] = arg.SubtopicFilter
+	}
+	if arg.LevelOfEducationFilter != "" {
+		filter["level_of_education"] = arg.LevelOfEducationFilter
+	}
+	if arg.LanguageFilter != "" {
+		filter["language"] = arg.LanguageFilter
+	}
+
+	return filter
+}
+
+func optionsFromParams(arg ListProblemsParams) *options.FindOptions {
+	findOptions := options.Find()
+	findOptions.SetLimit(int64(arg.Limit))
+	findOptions.SetSkip(int64(arg.Skip))
+
+	if arg.OrderBy == "" {
+		arg.OrderBy = "created_at"
+	}
+	if arg.Descending == nil {
+		descending := true
+		arg.Descending = &descending
+	}
+
+	var sort bson.D
+	if *arg.Descending {
+		sort = bson.D{{Key: arg.OrderBy, Value: -1}}
+	} else {
+		sort = bson.D{{Key: arg.OrderBy, Value: 1}}
+	}
+	findOptions.SetSort(sort)
+
+	return findOptions
 }
 
 type SolveTFProblemParams struct {

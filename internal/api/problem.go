@@ -21,7 +21,7 @@ func (server *Server) setupProblemRoutes() {
 		problemGroup.POST("/solve-ms", server.solveMSProblem)
 
 		problemGroup.GET("/:id", server.getProblem)
-		problemGroup.GET("", server.listProblems)
+		problemGroup.POST("", server.listProblems)
 		problemGroup.POST("/:id", server.updateProblem)
 		problemGroup.DELETE("/:id", server.deleteProblem)
 
@@ -122,10 +122,19 @@ func (server *Server) listProblems(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.ListProblemsParams{
+	var arg db.ListProblemsParams
+
+	if err := ctx.ShouldBindJSON(&arg); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	pagination := db.PaginationParams{
 		Limit: req.PageSize,
 		Skip:  (req.PageID - 1) * req.PageSize,
 	}
+
+	arg.PaginationParams = pagination
 
 	problems, err := server.db.ListProblems(arg)
 	if err != nil {
