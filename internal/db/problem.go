@@ -330,11 +330,15 @@ func optionsFromParams(arg ListProblemsParams) *options.FindOptions {
 	return findOptions
 }
 
+type SolveProblemParams struct {
+	UserID    string `json:"user_id" binding:"required"`
+	ProblemID string `json:"problem_id" binding:"required"`
+}
+
 type SolveTFProblemParams struct {
-	UserID       string `json:"user_id" binding:"required"`
-	ProblemID    string `json:"problem_id" binding:"required"`
-	BoolAnswer   *bool  `json:"bool_answer" binding:"required"`
-	BoolResponse *bool  `json:"bool_response" binding:"required"`
+	SolveProblemParams
+	BoolAnswer   *bool `json:"bool_answer" binding:"required"`
+	BoolResponse *bool `json:"bool_response" binding:"required"`
 }
 
 func (db *MongoDB) SolveTFProblem(arg SolveTFProblemParams) (TFProblemAttempt, error) {
@@ -361,6 +365,11 @@ func (db *MongoDB) SolveTFProblem(arg SolveTFProblemParams) (TFProblemAttempt, e
 	}
 	options := options.Update().SetUpsert(true)
 	_, err = collection.UpdateOne(context.Background(), filter, update, options)
+	if err != nil {
+		return attempt, err
+	}
+
+	err = db.updateProblemAttempts(arg.SolveProblemParams, attempt.SolutionAccuracy)
 
 	return attempt, err
 }
@@ -382,9 +391,39 @@ func tfSolutionAccuracy(answer bool, response bool) SolutionAccuracy {
 	return Incorrect
 }
 
+func (db *MongoDB) updateProblemAttempts(arg SolveProblemParams, solutionAccuracy SolutionAccuracy) error {
+	problem, err := db.GetProblem(arg.ProblemID)
+	if err != nil {
+		return err
+	}
+
+	attempts := problem.Attempts + 1
+	correctAnswers := problem.CorrectAnswers
+	if solutionAccuracy == Correct {
+		correctAnswers++
+	}
+	accuracy := float32(correctAnswers) / float32(attempts)
+
+	objectID, err := primitive.ObjectIDFromHex(arg.ProblemID)
+	if err != nil {
+		return err
+	}
+
+	collection := db.client.Database("solvify").Collection("problems")
+	filter := bson.M{"_id": objectID}
+	update := bson.M{"$set": bson.M{
+		"attempts":        attempts,
+		"correct_answers": correctAnswers,
+		"accuracy":        accuracy,
+	}}
+
+	_, err = collection.UpdateOne(context.Background(), filter, update)
+
+	return err
+}
+
 type SolveMTFProblemParams struct {
-	UserID        string `json:"user_id" binding:"required"`
-	ProblemID     string `json:"problem_id" binding:"required"`
+	SolveProblemParams
 	BoolAnswers   []bool `json:"bool_answers" binding:"required"`
 	BoolResponses []bool `json:"bool_responses" binding:"required"`
 }
@@ -413,6 +452,11 @@ func (db *MongoDB) SolveMTFProblem(arg SolveMTFProblemParams) (MTFProblemAttempt
 	}
 	options := options.Update().SetUpsert(true)
 	_, err = collection.UpdateOne(context.Background(), filter, update, options)
+	if err != nil {
+		return attempt, err
+	}
+
+	err = db.updateProblemAttempts(arg.SolveProblemParams, attempt.SolutionAccuracy)
 
 	return attempt, err
 }
@@ -447,10 +491,9 @@ func mtfSolutionAccuracy(answers []bool, responses []bool) SolutionAccuracy {
 }
 
 type SolveMCProblemParams struct {
-	UserID       string `json:"user_id" binding:"required"`
-	ProblemID    string `json:"problem_id" binding:"required"`
-	CorrectItem  *int   `json:"correct_item" binding:"required"`
-	ItemResponse *int   `json:"item_response" binding:"required"`
+	SolveProblemParams
+	CorrectItem  *int `json:"correct_item" binding:"required"`
+	ItemResponse *int `json:"item_response" binding:"required"`
 }
 
 func (db *MongoDB) SolveMCProblem(arg SolveMCProblemParams) (MCProblemAttempt, error) {
@@ -477,6 +520,11 @@ func (db *MongoDB) SolveMCProblem(arg SolveMCProblemParams) (MCProblemAttempt, e
 	}
 	options := options.Update().SetUpsert(true)
 	_, err = collection.UpdateOne(context.Background(), filter, update, options)
+	if err != nil {
+		return attempt, err
+	}
+
+	err = db.updateProblemAttempts(arg.SolveProblemParams, attempt.SolutionAccuracy)
 
 	return attempt, err
 }
@@ -499,8 +547,7 @@ func mcSolutionAccuracy(answer int, response int) SolutionAccuracy {
 }
 
 type SolveMSProblemParams struct {
-	UserID        string `json:"user_id" binding:"required"`
-	ProblemID     string `json:"problem_id" binding:"required"`
+	SolveProblemParams
 	CorrectItems  []bool `json:"correct_items" binding:"required"`
 	ItemResponses []bool `json:"item_responses" binding:"required"`
 }
@@ -529,6 +576,11 @@ func (db *MongoDB) SolveMSProblem(arg SolveMSProblemParams) (MSProblemAttempt, e
 	}
 	options := options.Update().SetUpsert(true)
 	_, err = collection.UpdateOne(context.Background(), filter, update, options)
+	if err != nil {
+		return attempt, err
+	}
+
+	err = db.updateProblemAttempts(arg.SolveProblemParams, attempt.SolutionAccuracy)
 
 	return attempt, err
 }
