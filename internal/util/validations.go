@@ -7,7 +7,7 @@ const (
 
 func IsSupportedLanguage(language string) bool {
 	switch language {
-	case en, pt:
+	case en, pt, "":
 		return true
 	}
 	return false
@@ -23,7 +23,7 @@ func IsFieldToOrderProblems(field string) bool {
 
 func IsLevelOfEducation(level string) bool {
 	switch level {
-	case "primary", "secondary", "higher":
+	case "primary", "secondary", "higher", "":
 		return true
 	}
 	return false

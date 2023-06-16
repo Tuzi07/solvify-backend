@@ -179,10 +179,10 @@ type ListReport struct {
 }
 
 type ProblemEditSuggestion struct {
-	ID          string    `json:"_id" bson:"_id,omitempty"`
-	ProblemID   string    `json:"problem_id" bson:"problem_id"`
-	UserID      string    `json:"user_id" bson:"user_id"`
-	SuggestedAt time.Time `json:"suggested_at" bson:"suggested_at"`
+	ID              string    `json:"_id" bson:"_id,omitempty"`
+	ProblemID       string    `json:"problem_id" bson:"problem_id"`
+	CreatorUsername string    `json:"user_id" bson:"user_id"`
+	SuggestedAt     time.Time `json:"suggested_at" bson:"suggested_at"`
 
 	Feedback         string `json:"feedback" bson:"feedback"`
 	SubjectID        string `json:"subject_id" bson:"subject_id"`

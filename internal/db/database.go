@@ -20,6 +20,7 @@ type Database interface {
 	UserDatabase
 	ProblemListDatabase
 	LabelsDatabase
+	ProblemEditSuggestionDatabase
 }
 
 func NewMongoDB() (*MongoDB, error) {
