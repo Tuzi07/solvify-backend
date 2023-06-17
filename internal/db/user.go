@@ -15,6 +15,7 @@ type UserDatabase interface {
 	UpdateUser(arg UpdateUserParams, id string) error
 	DeleteUser(id string) error
 	CheckEmailUnique(arg CheckEmailUniqueParams) (bool, error)
+	GetUserByEmail(arg GetUserByEmailParams) (User, error)
 }
 
 type CreateUserParams struct {
@@ -134,4 +135,18 @@ func (db *MongoDB) CheckEmailUnique(arg CheckEmailUniqueParams) (bool, error) {
 		return false, err
 	}
 	return count == 0, err
+}
+
+type GetUserByEmailParams struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+func (db *MongoDB) GetUserByEmail(arg GetUserByEmailParams) (User, error) {
+	var user User
+
+	collection := db.client.Database("solvify").Collection("users")
+	filter := bson.D{{Key: "email", Value: arg.Email}}
+	err := collection.FindOne(context.Background(), filter).Decode(&user)
+
+	return user, err
 }

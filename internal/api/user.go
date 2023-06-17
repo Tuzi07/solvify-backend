@@ -15,6 +15,7 @@ func (server *Server) setupUserRoutes() {
 		userGroup.POST("/:id", server.updateUser)
 		userGroup.DELETE("/:id", server.deleteUser)
 
+		userGroup.POST("/email", server.getUserByEmail)
 		userGroup.POST("/check-email-unique", server.checkEmailUnique)
 	}
 }
@@ -99,4 +100,20 @@ func (server *Server) checkEmailUnique(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"is_unique": isUnique})
+}
+
+func (server *Server) getUserByEmail(ctx *gin.Context) {
+	var arg db.GetUserByEmailParams
+	if err := ctx.ShouldBindJSON(&arg); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	user, err := server.db.GetUserByEmail(arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, user)
 }
