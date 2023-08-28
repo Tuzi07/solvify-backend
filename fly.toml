@@ -11,7 +11,6 @@ primary_region = "gig"
   buildpacks = ["gcr.io/paketo-buildpacks/go"]
 
 [env]
-  MONGODB_URI = ${{ secrets.MONGODB_URI }}
   PORT = "8080"
 
 [http_service]
