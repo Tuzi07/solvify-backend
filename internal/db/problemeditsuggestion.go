@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -42,7 +43,7 @@ func suggestionFromParams(arg CreateProblemEditSuggestionParams) ProblemEditSugg
 func (db *MongoDB) CreateProblemEditSuggestion(arg CreateProblemEditSuggestionParams) (ProblemEditSuggestion, error) {
 	suggestion := suggestionFromParams(arg)
 
-	collection := db.client.Database("solvify").Collection("problem_edit_suggestions")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("problem_edit_suggestions")
 	result, err := collection.InsertOne(context.Background(), suggestion)
 
 	id := result.InsertedID.(primitive.ObjectID).Hex()
@@ -57,7 +58,7 @@ func (db *MongoDB) GetProblemEditSuggestion(id string) (ProblemEditSuggestion, e
 		return ProblemEditSuggestion{}, err
 	}
 
-	collection := db.client.Database("solvify").Collection("problem_edit_suggestions")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("problem_edit_suggestions")
 	filter := bson.M{"_id": objectID}
 	result := collection.FindOne(context.Background(), filter)
 
@@ -72,7 +73,7 @@ func (db *MongoDB) DeleteProblemEditSuggestion(id string) error {
 		return err
 	}
 
-	collection := db.client.Database("solvify").Collection("problem_edit_suggestions")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("problem_edit_suggestions")
 	result, err := collection.DeleteOne(context.Background(), bson.M{"_id": objectID})
 
 	if result.DeletedCount == 0 {
@@ -83,7 +84,7 @@ func (db *MongoDB) DeleteProblemEditSuggestion(id string) error {
 }
 
 func (db *MongoDB) ListSuggestionsOfProblem(problemID string) ([]ProblemEditSuggestion, error) {
-	collection := db.client.Database("solvify").Collection("problem_edit_suggestions")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("problem_edit_suggestions")
 	filter := bson.M{"problem_id": problemID}
 	cursor, err := collection.Find(context.Background(), filter)
 	if err != nil {

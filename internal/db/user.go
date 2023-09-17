@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -47,7 +48,7 @@ func (db *MongoDB) CreateUser(arg CreateUserParams) (User, error) {
 		return user, errors.New("username already exists")
 	}
 
-	collection := db.client.Database("solvify").Collection("users")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("users")
 	result, err := collection.InsertOne(context.Background(), user)
 
 	id := result.InsertedID.(primitive.ObjectID).Hex()
@@ -57,7 +58,7 @@ func (db *MongoDB) CreateUser(arg CreateUserParams) (User, error) {
 }
 
 func (db *MongoDB) isUniqueUsername(username string) bool {
-	collection := db.client.Database("solvify").Collection("users")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("users")
 	filter := bson.D{{Key: "username", Value: username}}
 	count, err := collection.CountDocuments(context.Background(), filter)
 	if err != nil {
@@ -73,7 +74,7 @@ func (db *MongoDB) GetUser(id string) (User, error) {
 		return user, err
 	}
 
-	collection := db.client.Database("solvify").Collection("users")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("users")
 	filter := bson.D{{Key: "_id", Value: objectID}}
 	err = collection.FindOne(context.Background(), filter).Decode(&user)
 
@@ -91,7 +92,7 @@ func (db *MongoDB) UpdateUser(arg UpdateUserParams, id string) error {
 		return err
 	}
 
-	collection := db.client.Database("solvify").Collection("users")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("users")
 	filter := bson.D{{Key: "_id", Value: objectID}}
 	update := bson.M{"$set": bson.M{
 		"display_name": arg.DisplayName,
@@ -112,7 +113,7 @@ func (db *MongoDB) DeleteUser(id string) error {
 		return err
 	}
 
-	collection := db.client.Database("solvify").Collection("users")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("users")
 	filter := bson.D{{Key: "_id", Value: objectID}}
 	result, err := collection.DeleteOne(context.Background(), filter)
 
@@ -128,7 +129,7 @@ type CheckEmailUniqueParams struct {
 }
 
 func (db *MongoDB) CheckEmailUnique(arg CheckEmailUniqueParams) (bool, error) {
-	collection := db.client.Database("solvify").Collection("users")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("users")
 	filter := bson.D{{Key: "email", Value: arg.Email}}
 	count, err := collection.CountDocuments(context.Background(), filter)
 	if err != nil {
@@ -144,7 +145,7 @@ type GetUserByEmailParams struct {
 func (db *MongoDB) GetUserByEmail(arg GetUserByEmailParams) (User, error) {
 	var user User
 
-	collection := db.client.Database("solvify").Collection("users")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("users")
 	filter := bson.D{{Key: "email", Value: arg.Email}}
 	err := collection.FindOne(context.Background(), filter).Decode(&user)
 

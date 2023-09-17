@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -40,7 +41,7 @@ func listFromCreateParams(arg CreateProblemListParams) ProblemList {
 func (db *MongoDB) CreateProblemList(arg CreateProblemListParams) (ProblemList, error) {
 	problemList := listFromCreateParams(arg)
 
-	collection := db.client.Database("solvify").Collection("problemlists")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("problemlists")
 	result, err := collection.InsertOne(context.Background(), problemList)
 
 	id := result.InsertedID.(primitive.ObjectID).Hex()
@@ -56,7 +57,7 @@ func (db *MongoDB) GetProblemList(id string) (ProblemList, error) {
 		return problemList, err
 	}
 
-	collection := db.client.Database("solvify").Collection("problemlists")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("problemlists")
 	filter := bson.D{{Key: "_id", Value: objectID}}
 	err = collection.FindOne(context.Background(), filter).Decode(&problemList)
 	return problemList, err
@@ -72,7 +73,7 @@ func (db *MongoDB) ListProblemLists(arg ListProblemListsParams) ([]ProblemList, 
 	findOptions.SetLimit(int64(arg.Limit))
 	findOptions.SetSkip(int64(arg.Skip))
 
-	collection := db.client.Database("solvify").Collection("problemlists")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("problemlists")
 	cursor, err := collection.Find(context.Background(), bson.M{}, findOptions)
 	if err != nil {
 		return nil, err
@@ -108,7 +109,7 @@ func (db *MongoDB) UpdateProblemList(arg UpdateProblemListParams, id string) err
 		return err
 	}
 
-	collection := db.client.Database("solvify").Collection("problemlists")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("problemlists")
 	filter := bson.M{"_id": objectID}
 	update := bson.M{"$set": bson.M{
 		"problem_ids": arg.ProblemIDs,
@@ -130,7 +131,7 @@ func (db *MongoDB) DeleteProblemList(id string) error {
 		return err
 	}
 
-	collection := db.client.Database("solvify").Collection("problemlists")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("problemlists")
 	filter := bson.D{{Key: "_id", Value: objectID}}
 	result, err := collection.DeleteOne(context.Background(), filter)
 

@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,7 +22,7 @@ type ProblemAttemptTableRow struct {
 }
 
 func (db *MongoDB) ListUserAttempts(id string, pagination PaginationParams) ([]ProblemAttemptTableRow, error) {
-	collection := db.client.Database("solvify").Collection("problem_attempts")
+	collection := db.client.Database(os.Getenv("MONGODB_DB_NAME")).Collection("problem_attempts")
 	filter := bson.M{"user_id": id}
 	findOptions := options.Find()
 	findOptions.SetLimit(int64(pagination.Limit))
